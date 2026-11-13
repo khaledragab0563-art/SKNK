@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sknk | سكنك - أقرب لمستقبلك (جامعة المنيا)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #FAF6F0; color: #2D2D2D; }
+        .primary-color { color: #761527; }
+        .bg-primary { background-color: #761527; }
+        .border-primary { border-color: #761527; }
+        .secondary-color { color: #144B39; }
+        .bg-secondary { background-color: #144B39; }
+        .hover-primary:hover { background-color: #5d111f; }
+        .bg-cream { background-color: #FAF6F0; }
+    </style>
+</head>
+<body class="bg-cream min-h-screen flex flex-col">
+
+    <!-- Auth Overlay Modal (Default if not logged in) -->
+    <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-stone-200">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1 mx-auto">
+                    <svg viewBox="0 0 500 500" class="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M250 40 L420 160 V420 H320 V280 H180 V420 H80 V160 Z" fill="#761527"/>
+                        <circle cx="250" cy="220" r="45" fill="#144B39"/>
+                        <path d="M160 380 Q250 310 340 380" stroke="#144B39" stroke-width="20" stroke-linecap="round"/>
+                        <circle cx="370" cy="240" r="30" fill="#761527"/>
+                        <circle cx="370" cy="240" r="12" fill="#FAF6F0"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-black primary-color tracking-wide">Sknk - سكنك</h1>
+                <p id="authSubtitle" class="text-xs text-stone-500 font-semibold">بوابة الدخول لسكن طلاب جامعة المنيا</p>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-2xl border border-stone-200">
+                <button onclick="setAuthRole('student')" id="authRoleStudentBtn" class="py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
+                    👨‍🎓 طالب
+                </button>
+                <button onclick="setAuthRole('owner')" id="authRoleOwnerBtn" class="py-2.5 rounded-xl text-xs font-bold transition text-stone-700">
+                    🏠 مالك عقار
+                </button>
+            </div>
+
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4 text-sm">
+                <div id="authNameContainer" class="hidden">
+                    <label class="block font-bold text-stone-700 mb-1">الاسم الكامل</label>
+                    <input type="text" id="authName" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 focus:outline-none focus:border-primary" placeholder="اسمك الثلاثي...">
+                </div>
+                <div>
+                    <label class="block font-bold text-stone-700 mb-1">البريد الإلكتروني (Gmail)</label>
+                    <input type="email" id="authEmail" required class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 focus:outline-none focus:border-primary" placeholder="user@gmail.com">
+                </div>
+                <div>
+                    <label class="block font-bold text-stone-700 mb-1">كلمة المرور</label>
+                    <input type="password" id="authPass" required class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 focus:outline-none focus:border-primary" placeholder="••••••••">
+                </div>
+                <button type="submit" id="authSubmitBtn" class="w-full bg-primary hover-primary text-white font-bold py-3.5 rounded-xl transition shadow text-base">
+                    تسجيل الدخول
+                </button>
+            </form>
+
+            <div class="text-center pt-2 border-t border-stone-100">
+                <p class="text-xs text-stone-500">
+                    <span id="authToggleText">ليس لديك حساب؟</span> 
+                    <button onclick="toggleAuthMode()" id="authToggleBtn" class="font-bold primary-color hover:underline mr-1">إنشاء حساب جديد</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-amber-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer" onclick="switchView('student')">
+                <div class="w-12 h-12 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1">
+                    <svg viewBox="0 0 500 500" class="w-10 h-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M250 40 L420 160 V420 H320 V280 H180 V420 H80 V160 Z" fill="#761527"/>
+                        <circle cx="250" cy="220" r="45" fill="#144B39"/>
+                        <path d="M160 380 Q250 310 340 380" stroke="#144B39" stroke-width="20" stroke-linecap="round"/>
+                        <circle cx="370" cy="240" r="30" fill="#761527"/>
+                        <circle cx="370" cy="240" r="12" fill="#FAF6F0"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black primary-color tracking-wide">Sknk</h1>
+                    <p class="text-xs text-stone-500 font-semibold">سكنك .. أقرب لمستقبلك (جامعة المنيا)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="sharePlatform()" class="hidden md:flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm font-bold hover:bg-amber-100 transition">
+                    📢 شارك المنصة
+                </button>
+                <div class="bg-stone-100 p-1 rounded-2xl flex border border-stone-200">
+                    <button id="btnStudent" onclick="switchView('student')" class="px-4 py-2 rounded-xl text-sm font-bold transition bg-primary text-white shadow-sm">
+                        👨‍🎓 الطالب
+                    </button>
+                    <button id="btnOwner" onclick="switchView('owner')" class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700 hover:text-primary">
+                        🏠 المالك
+                    </button>
+                    <button id="btnAdmin" onclick="switchView('admin')" class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700 hover:text-secondary">
+                        ⚙️ الإدارة
+                    </button>
+                </div>
+                <button onclick="logout()" class="text-xs text-red-600 font-bold px-3 py-2 bg-red-50 rounded-xl hover:bg-red-100 transition">خروج</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- STUDENT VIEW -->
+        <div id="studentView" class="space-y-8">
+            <div class="bg-gradient-to-r from-[#761527] to-[#144B39] rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">المنصة الرسمية لسكن طلاب جامعة المنيا</span>
+                    <h2 class="text-3xl sm:text-4xl font-black mt-3 leading-tight">اعثر على سكنك الجامعي المثالي قرب كليتك</h2>
+                    <p class="text-stone-100 mt-2 text-sm">جميع الوحدات معتمدة ومدارة بالكامل عبر إدارة Sknk لضمان حقوقك.</p>
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <button onclick="openMyBookings()" class="bg-white text-[#761527] font-bold px-6 py-3 rounded-2xl shadow hover:bg-amber-50 transition text-sm">
+                            📋 متابعة حجوزاتي وطلباتي
+                        </button>
+                        <button onclick="sharePlatform()" class="bg-amber-400/20 border border-white/30 text-white font-bold px-5 py-3 rounded-2xl hover:bg-amber-400/30 transition text-sm">
+                            🔗 شارك المنصة مع زملائك
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-stone-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-stone-600 mb-1">بحث بالمنطقة أو العنوان أو الكلية</label>
+                    <input type="text" id="searchInput" oninput="filterListings()" placeholder="ابحث باسم المنطقة (مثال: حي شلبي، عدنان المالكي...)..." class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-stone-600 mb-1">نوع السكن</label>
+                    <select id="typeFilter" onchange="filterListings()" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm focus:outline-none">
+                        <option value="">جميع الأنواع</option>
+                        <option value="شقة كاملة">شقة كاملة</option>
+                        <option value="غرفة مستقلة">غرفة مستقلة</option>
+                        <option value="سرير (مشاركة)">سرير (مشاركة)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Listings -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-stone-800">الوحدات السكنية المتاحة حالياً</h3>
+                    <span id="listingsCount" class="text-sm font-bold text-stone-500 bg-white px-3 py-1 rounded-full border">0 وحدة متوفرة</span>
+                </div>
+                <div id="listingsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </div>
+
+        <!-- OWNER VIEW -->
+        <div id="ownerView" class="hidden space-y-8">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-stone-200 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك</span>
+                    <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل سهولة</h2>
+                    <p class="text-stone-500 text-sm mt-1">اكتب اسم المنطقة والشارع بحرية، والتعامل يتم بالكامل عبر إدارة Sknk.</p>
+                </div>
+                <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm">
+                    ➕ إضافة شقة جديدة للإدارة
+                </button>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
+                <h3 class="text-lg font-bold text-stone-800 mb-4">وحداتي المعروضة وحالتها لدى الإدارة</h3>
+                <div id="ownerListingsContainer" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="adminView" class="hidden space-y-8">
+            <div class="bg-[#761527] text-white p-8 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <span class="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">لوحة الإدارة المركزية</span>
+                    <h2 class="text-2xl font-black mt-2">إدارة منصة Sknk (المنيا)</h2>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalListings" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">وحدات</span></div>
+                    <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalRequests" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">حجوزات</span></div>
+                </div>
+            </div>
+            <div class="flex border-b border-stone-300 gap-4">
+                <button onclick="switchAdminTab('listings')" id="adminTabListingsBtn" class="pb-3 font-bold text-primary border-b-2 border-primary text-sm">مراجعة الوحدات</button>
+                <button onclick="switchAdminTab('bookings')" id="adminTabBookingsBtn" class="pb-3 font-bold text-stone-500 text-sm">طلبات حجز الطلاب</button>
+            </div>
+            <div id="adminListingsTabContent" class="space-y-4">
+                <div id="adminListingsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+            <div id="adminBookingsTabContent" class="hidden space-y-4">
+                <div id="adminBookingsContainer" class="space-y-4"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer & Social -->
+    <footer class="bg-white border-t border-amber-100 mt-16 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <span class="font-black text-lg primary-color">Sknk - سكنك (جامعة المنيا)</span>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="openSocialModal('whatsapp')" class="px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold">🟢 واتساب الإدارة</button>
+                    <button onclick="openSocialModal('telegram')" class="px-4 py-2 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold">✈️ تيليجرام السكن</button>
+                </div>
+            </div>
+            <p class="text-xs text-stone-500 text-center">جميع الحقوق محفوظة © 2026 منصة Sknk.</p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="addListingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-stone-800">إضافة وحدة سكنية للإدارة</h3>
+                <button onclick="closeAddListingModal()" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <form onsubmit="submitNewListing(event)" class="space-y-4 text-sm">
+                <div><label class="block font-bold mb-1">عنوان الوحدة المختصر</label><input type="text" id="propTitle" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="مثال: شقة مجهزة قريبة من البوابة"></div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold mb-1">المنطقة (اكتبها بحرية)</label>
+                        <input type="text" id="propArea" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="مثال: حي شلبي، عدنان المالكي...">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">نوع السكن</label>
+                        <select id="propType" class="w-full bg-stone-50 border rounded-xl px-3 py-2.5">
+                            <option value="شقة كاملة">شقة كاملة</option>
+                            <option value="غرفة مستقلة">غرفة مستقلة</option>
+                            <option value="سرير (مشاركة)">سرير (مشاركة)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div><label class="block font-bold mb-1">العنوان التفصيلي الدقيق (سري للإدارة فقط)</label><input type="text" id="propDetailedAddress" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="اسم الشارع، رقم العمارة، الدور..."></div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block font-bold mb-1">الإيجار الشهري (ج.م)</label><input type="number" id="propPrice" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="5000"></div>
+                    <div><label class="block font-bold mb-1">رقم هاتف المالك (سري)</label><input type="text" id="propOwnerPhone" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="010XXXXXXXX"></div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div><label class="block font-bold mb-1">الغرف</label><input type="number" id="propRooms" value="2" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
+                    <div><label class="block font-bold mb-1">الحمامات</label><input type="number" id="propBathrooms" value="1" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
+                    <div><label class="block font-bold mb-1">الاستيعاب</label><input type="number" id="propCapacity" value="3" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
+                </div>
+
+                <div><label class="block font-bold mb-1">رابط صورة الوحدة (URL)</label><input type="url" id="propImage" value="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5"></div>
+                <div><label class="block font-bold mb-1">مواصفات السكن والمميزات</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي، أثاث كامل..."></textarea></div>
+                
+                <button type="submit" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition">إرسال الوحدة للإدارة للمراجعة</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Property Details & Booking Modal -->
+    <div id="propertyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modalPropTitle" class="text-xl font-black text-stone-800">تفاصيل السكن</h3>
+                <button onclick="closePropertyModal()" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <div id="modalPropContent" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- My Bookings Modal -->
+    <div id="myBookingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-stone-800">📋 حجوزاتي وطلباتي</h3>
+                <button onclick="closeMyBookings()" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <div id="myBookingsContainerModal" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Social Modal -->
+    <div id="socialModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4">
+            <h3 id="socialModalTitle" class="text-xl font-bold">قنوات التواصل</h3>
+            <p id="socialModalDesc" class="text-stone-500 text-sm">تواصل مع إدارة سكنك:</p>
+            <div class="bg-stone-50 p-3 rounded-2xl border font-mono font-bold text-primary text-lg" id="socialModalValue">+20 100 000 2026</div>
+            <button onclick="document.getElementById('socialModal').classList.add('hidden')" class="w-full bg-stone-100 text-stone-700 font-bold py-3 rounded-xl">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        let currentUser = JSON.parse(localStorage.getItem('sknk_current_user')) || null;
+        let authRole = 'student';
+        let isAuthLogin = true;
+
+        let listings = JSON.parse(localStorage.getItem('sknk_listings')) || [];
+        let bookings = JSON.parse(localStorage.getItem('sknk_bookings')) || [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if(!currentUser) {
+                document.getElementById('authOverlay').classList.remove('hidden');
+            } else {
+                document.getElementById('authOverlay').classList.add('hidden');
+                switchView(currentUser.role);
+            }
+        });
+
+        function setAuthRole(role) {
+            authRole = role;
+            if(role === 'student') {
+                document.getElementById('authRoleStudentBtn').className = "py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm";
+                document.getElementById('authRoleOwnerBtn').className = "py-2.5 rounded-xl text-xs font-bold transition text-stone-700";
+            } else {
+                document.getElementById('authRoleOwnerBtn').className = "py-2.5 rounded-xl text-xs font-bold transition bg-secondary text-white shadow-sm";
+                document.getElementById('authRoleStudentBtn').className = "py-2.5 rounded-xl text-xs font-bold transition text-stone-700";
+            }
+        }
+
+        function toggleAuthMode() {
+            isAuthLogin = !isAuthLogin;
+            const subtitle = document.getElementById('authSubtitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const toggleText = document.getElementById('authToggleText');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const nameContainer = document.getElementById('authNameContainer');
+
+            if(isAuthLogin) {
+                subtitle.innerText = "تسجيل الدخول لبوابة سكن طلاب جامعة المنيا";
+                submitBtn.innerText = "تسجيل الدخول";
+                toggleText.innerText = "ليس لديك حساب؟";
+                toggleBtn.innerText = "إنشاء حساب جديد";
+                nameContainer.classList.add('hidden');
+            } else {
+                subtitle.innerText = "إنشاء حساب جديد في المنصة";
+                submitBtn.innerText = "إنشاء الحساب";
+                toggleText.innerText = "لديك حساب بالفعل؟";
+                toggleBtn.innerText = "تسجيل الدخول";
+                nameContainer.classList.remove('hidden');
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const name = document.getElementById('authName').value || (authRole === 'student' ? 'طالب المنيا' : 'مالك عقار');
+
+            currentUser = { email, name, role: authRole };
+            localStorage.setItem('sknk_current_user', JSON.stringify(currentUser));
+            document.getElementById('authOverlay').classList.add('hidden');
+            switchView(authRole);
+            alert(`أهلاً بك يا ${name}! تم تسجيل الدخول بنجاح.`);
+        }
+
+        function logout() {
+            localStorage.removeItem('sknk_current_user');
+            currentUser = null;
+            document.getElementById('authOverlay').classList.remove('hidden');
+        }
+
+        function switchView(role) {
+            document.getElementById('studentView').classList.add('hidden');
+            document.getElementById('ownerView').classList.add('hidden');
+            document.getElementById('adminView').classList.add('hidden');
+
+            document.getElementById('btnStudent').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
+            document.getElementById('btnOwner').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
+            document.getElementById('btnAdmin').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
+
+            if(role === 'student') {
+                document.getElementById('studentView').classList.remove('hidden');
+                document.getElementById('btnStudent').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-primary text-white shadow-sm";
+                renderStudentListings();
+            } else if(role === 'owner') {
+                document.getElementById('ownerView').classList.remove('hidden');
+                document.getElementById('btnOwner').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-secondary text-white shadow-sm";
+                renderOwnerListings();
+            } else if(role === 'admin') {
+                document.getElementById('adminView').classList.remove('hidden');
+                document.getElementById('btnAdmin').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-emerald-900 text-white shadow-sm";
+                renderAdminData();
+            }
+        }
+
+        function renderStudentListings(filtered = null) {
+            const container = document.getElementById('listingsContainer');
+            const data = filtered || listings.filter(l => l.status === 'approved');
+            document.getElementById('listingsCount').innerText = `${data.length} وحدة متوفرة`;
+
+            if(data.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">المنصة بانتظار إضافات الملاك قريباً.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(item => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-stone-200 flex flex-col">
+                    <div class="relative h-48">
+                        <img src="${item.image}" class="w-full h-full object-cover" alt="شقة">
+                        <span class="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full text-xs font-bold primary-color">${item.area}</span>
+                        <span class="absolute top-3 left-3 bg-[#144B39] text-white px-3 py-1 rounded-full text-xs font-bold">⭐️ موثقة</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div>
+                            <h4 class="font-bold text-stone-800">${item.title}</h4>
+                            <p class="text-xs text-stone-500 mt-1">نوع السكن: <b>${item.type}</b></p>
+                            <p class="text-xs text-secondary font-bold mt-1">🔒 الوساطة حصرياً عبر Sknk</p>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t">
+                            <span class="text-lg font-black primary-color">${item.price} ج.م <span class="text-xs font-normal text-stone-500">/ شهر</span></span>
+                            <button onclick="openPropertyModal(${item.id})" class="bg-primary text-white font-bold px-4 py-2 rounded-xl text-sm hover-primary">تفاصيل والحجز</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterListings() {
+            const s = document.getElementById('searchInput').value.toLowerCase();
+            const t = document.getElementById('typeFilter').value;
+            const filtered = listings.filter(l => l.status === 'approved' && (l.title.toLowerCase().includes(s) || l.area.toLowerCase().includes(s)) && (!t || l.type === t));
+            renderStudentListings(filtered);
+        }
+
+        function openAddListingModal() { document.getElementById('addListingModal').classList.remove('hidden'); }
+        function closeAddListingModal() { document.getElementById('addListingModal').classList.add('hidden'); }
+
+        function submitNewListing(e) {
+            e.preventDefault();
+            const newProp = {
+                id: Date.now(),
+                title: document.getElementById('propTitle').value,
+                area: document.getElementById('propArea').value,
+                type: document.getElementById('propType').value,
+                detailedAddress: document.getElementById('propDetailedAddress').value,
+                price: document.getElementById('propPrice').value,
+                ownerPhone: document.getElementById('propOwnerPhone').value,
+                rooms: document.getElementById('propRooms').value,
+                bathrooms: document.getElementById('propBathrooms').value,
+                capacity: document.getElementById('propCapacity').value,
+                image: document.getElementById('propImage').value,
+                desc: document.getElementById('propDesc').value,
+                status: 'pending'
+            };
+            listings.push(newProp);
+            localStorage.setItem('sknk_listings', JSON.stringify(listings));
+            closeAddListingModal();
+            alert('تم إرسال وحدتك بنجاح للإدارة للمراجعة.');
+            renderOwnerListings();
+        }
+
+        function renderOwnerListings() {
+            const container = document.getElementById('ownerListingsContainer');
+            if(listings.length === 0) {
+                container.innerHTML = `<p class="text-stone-500 text-sm text-center py-6">لم تقم بإضافة أي وحدات بعد.</p>`;
+                return;
+            }
+            container.innerHTML = listings.map(item => `
+                <div class="bg-stone-50 border rounded-2xl p-4 flex justify-between items-center gap-4">
+                    <div class="flex items-center gap-4">
+                        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover" alt="شقة">
+                        <div>
+                            <h4 class="font-bold text-stone-800">${item.title}</h4>
+                            <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> - ${item.price} ج.م</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${item.status === 'approved' ? 'منشور' : 'قيد المراجعة'}</span>
+                        <button onclick="deleteListing(${item.id})" class="text-red-500 text-xs font-bold px-3 py-1.5 bg-red-50 rounded-lg">حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteListing(id) {
+            listings = listings.filter(l => l.id !== id);
+            localStorage.setItem('sknk_listings', JSON.stringify(listings));
+            renderOwnerListings();
+        }
+
+        function openPropertyModal(id) {
+            const prop = listings.find(l => l.id === id);
+            if(!prop) return;
+            document.getElementById('modalPropTitle').innerText = prop.title;
+            document.getElementById('modalPropContent').innerHTML = `
+                <div class="space-y-4">
+                    <img src="${prop.image}" class="w-full h-56 rounded-2xl object-cover" alt="شقة">
+                    <div class="grid grid-cols-2 gap-3 bg-stone-50 p-4 rounded-2xl text-center text-xs font-bold">
+                        <div><span class="block text-stone-400">المنطقة</span>${prop.area}</div>
+                        <div><span class="block text-stone-400">نوع السكن</span>${prop.type}</div>
+                    </div>
+                    <p class="text-stone-600 text-sm bg-stone-50 p-3 rounded-xl">${prop.desc || 'لا يوجد وصف.'}</p>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs">⚠️ التعامل الأول والأخير (المعاينة والتعاقد) يتم حصرياً عبر إدارة Sknk.</div>
+                    
+                    <div class="bg-stone-50 p-4 rounded-2xl border space-y-3">
+                        <h4 class="font-bold text-primary text-sm">طلب حجز أو معاينة</h4>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <input type="text" id="bookName" placeholder="اسم الطالب الثلاثي" class="bg-white border rounded-xl p-2.5" value="${currentUser ? currentUser.name : ''}">
+                            <input type="text" id="bookPhone" placeholder="رقم الواتساب" class="bg-white border rounded-xl p-2.5">
+                            <input type="text" id="bookCollege" placeholder="الكلية والفرقة" class="bg-white border rounded-xl p-2.5">
+                            <select id="bookType" class="bg-white border rounded-xl p-2.5"><option>حجز فوري (عربون)</option><option>طلب معاينة</option></select>
+                        </div>
+                        <div class="pt-2 border-t space-y-2">
+                            <label class="font-bold text-stone-700 text-xs">👥 حجز أماكن للأصدقاء (حجز جماعي)</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="number" id="bookSpots" min="1" max="5" value="1" class="bg-white border rounded-xl p-2 text-xs" placeholder="عدد الأماكن">
+                                <input type="text" id="bookFriends" class="col-span-2 bg-white border rounded-xl p-2 text-xs" placeholder="أسماء الأصدقاء المرافقين...">
+                            </div>
+                        </div>
+                        <button onclick="submitBooking(${prop.id})" class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm">إرسال الطلب للإدارة</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('propertyModal').classList.remove('hidden');
+        }
+        function closePropertyModal() { document.getElementById('propertyModal').classList.add('hidden'); }
+
+        function submitBooking(propId) {
+            const name = document.getElementById('bookName').value;
+            const phone = document.getElementById('bookPhone').value;
+            const college = document.getElementById('bookCollege').value;
+            const type = document.getElementById('bookType').value;
+            const spots = document.getElementById('bookSpots').value;
+            const friends = document.getElementById('bookFriends').value;
+
+            if(!name || !phone || !college) { alert('يرجى إكمال البيانات الأساسية.'); return; }
+
+            const prop = listings.find(l => l.id === propId);
+            const booking = {
+                id: 'SKNK-' + Math.floor(1000 + Math.random() * 9000),
+                propId, propTitle: prop.title, propArea: prop.area,
+                studentName: name, studentPhone: phone, studentCollege: college,
+                bookingType: type, spotsCount: spots, friendsNames: friends,
+                status: 'pending', date: new Date().toLocaleDateString('ar-EG')
+            };
+            bookings.push(booking);
+            localStorage.setItem('sknk_bookings', JSON.stringify(bookings));
+            closePropertyModal();
+            alert(`تم تقديم طلبك بنجاح برقم #${booking.id}`);
+        }
+
+        function openMyBookings() {
+            const container = document.getElementById('myBookingsContainerModal');
+            if(bookings.length === 0) {
+                container.innerHTML = `<p class="text-stone-500 text-sm text-center py-6">ليس لديك طلبات حجز مسجلة.</p>`;
+            } else {
+                container.innerHTML = bookings.map(b => `
+                    <div class="bg-stone-50 border rounded-2xl p-4 space-y-2 text-sm">
+                        <div class="flex justify-between items-center"><span class="font-bold text-primary">رقم الطلب: #${b.id}</span><span class="text-xs font-bold px-2.5 py-1 rounded-full ${b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.status === 'confirmed' ? 'تم التأكيد' : 'قيد المراجعة'}</span></div>
+                        <p class="font-bold text-stone-800">${b.propTitle} (${b.propArea})</p>
+                        <p class="text-xs text-stone-600">نوع الطلب: <b>${b.bookingType}</b> | أماكن: <b>${b.spotsCount}</b> ${b.friendsNames ? `(الأصدقاء: ${b.friendsNames})` : ''}</p>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('myBookingsModal').classList.remove('hidden');
+        }
+        function closeMyBookings() { document.getElementById('myBookingsModal').classList.add('hidden'); }
+
+        function sharePlatform() {
+            if(navigator.share) { navigator.share({ title: 'منصة Sknk', url: window.location.href }).catch(()=>{}); }
+            else { prompt("انسخ رابط المنصة:", window.location.href); }
+        }
+        function openSocialModal(p) { document.getElementById('socialModal').classList.remove('hidden'); }
+
+        function switchAdminTab(tab) {
+            if(tab === 'listings') {
+                document.getElementById('adminListingsTabContent').classList.remove('hidden');
+                document.getElementById('adminBookingsTabContent').classList.add('hidden');
+                document.getElementById('adminTabListingsBtn').className = "pb-3 font-bold text-primary border-b-2 border-primary text-sm";
+                document.getElementById('adminTabBookingsBtn').className = "pb-3 font-bold text-stone-500 text-sm";
+            } else {
+                document.getElementById('adminListingsTabContent').classList.add('hidden');
+                document.getElementById('adminBookingsTabContent').classList.remove('hidden');
+                document.getElementById('adminTabListingsBtn').className = "pb-3 font-bold text-stone-500 text-sm";
+                document.getElementById('adminTabBookingsBtn').className = "pb-3 font-bold text-primary border-b-2 border-primary text-sm";
+            }
+        }
+
+        function renderAdminData() {
+            document.getElementById('adminTotalListings').innerText = listings.length;
+            document.getElementById('adminTotalRequests').innerText = bookings.length;
+
+            document.getElementById('adminListingsContainer').innerHTML = listings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات.</p>` : listings.map(item => `
+                <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm">
+                    <h4 class="font-bold">${item.title}</h4>
+                    <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> | ${item.price} ج.م</p>
+                    <p class="text-xs text-primary font-bold">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
+                    <div class="flex justify-between items-center pt-2 border-t">
+                        <span class="text-xs font-bold">${item.status}</span>
+                        <div class="flex gap-2">
+                            ${item.status !== 'approved' ? `<button onclick="adminApprove(${item.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold">موافقة ونشر</button>` : ''}
+                            <button onclick="deleteListing(${item.id}); renderAdminData();" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('adminBookingsContainer').innerHTML = bookings.length === 0 ? `<p class="text-stone-500 text-sm text-center py-6">لا توجد طلبات.</p>` : bookings.map(b => `
+                <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm">
+                    <div class="flex justify-between items-center"><span class="font-bold text-primary">طلب #${b.id}</span><span class="text-xs font-bold">${b.status}</span></div>
+                    <p class="text-xs"><b>الطالب:</b> ${b.studentName} (${b.studentPhone}) - ${b.studentCollege}</p>
+                    <p class="text-xs text-primary"><b>الوحدة:</b> ${b.propTitle} (${b.propArea}) | الأماكن: ${b.spotsCount}</p>
+                    <div class="flex gap-2 pt-2 border-t">
+                        ${b.status !== 'confirmed' ? `<button onclick="adminConfirmBooking('${b.id}', ${b.propId})" class="bg-primary text-white px-3 py-1 rounded-xl text-xs font-bold">تأكيد وإغلاق الشقة</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function adminApprove(id) {
+            const item = listings.find(l => l.id === id);
+            if(item) { item.status = 'approved'; localStorage.setItem('sknk_listings', JSON.stringify(listings)); renderAdminData(); }
+        }
+        function adminConfirmBooking(bookingId, propId) {
+            const b = bookings.find(x => x.id === bookingId);
+            if(b) { b.status = 'confirmed'; localStorage.setItem('sknk_bookings', JSON.stringify(bookings)); }
+            const p = listings.find(x => x.id === propId);
+            if(p) { p.status = 'booked'; localStorage.setItem('sknk_listings', JSON.stringify(listings)); }
+            renderAdminData();
+            alert('تم تأكيد الحجز بنجاح.');
+        }
+    </script>
+</body>
+</html>
