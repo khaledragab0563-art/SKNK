@@ -20,9 +20,9 @@
 </head>
 <body class="bg-cream min-h-screen flex flex-col">
 
-    <!-- Auth Overlay Modal (Default if not logged in) -->
-    <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-stone-200">
+    <!-- Auth Overlay Modal (Centered UX Fixed) -->
+    <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-stone-200 my-auto">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1 mx-auto">
                     <svg viewBox="0 0 500 500" class="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,10 +39,10 @@
 
             <!-- Role Selector -->
             <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-2xl border border-stone-200">
-                <button onclick="setAuthRole('student')" id="authRoleStudentBtn" class="py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
+                <button type="button" onclick="setAuthRole('student')" id="authRoleStudentBtn" class="py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
                     👨‍🎓 طالب
                 </button>
-                <button onclick="setAuthRole('owner')" id="authRoleOwnerBtn" class="py-2.5 rounded-xl text-xs font-bold transition text-stone-700">
+                <button type="button" onclick="setAuthRole('owner')" id="authRoleOwnerBtn" class="py-2.5 rounded-xl text-xs font-bold transition text-stone-700">
                     🏠 مالك عقار
                 </button>
             </div>
@@ -68,66 +68,71 @@
             <div class="text-center pt-2 border-t border-stone-100">
                 <p class="text-xs text-stone-500">
                     <span id="authToggleText">ليس لديك حساب؟</span> 
-                    <button onclick="toggleAuthMode()" id="authToggleBtn" class="font-bold primary-color hover:underline mr-1">إنشاء حساب جديد</button>
+                    <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="font-bold primary-color hover:underline mr-1">إنشاء حساب جديد</button>
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- Header / Navbar -->
+    <!-- Header / Navbar (Responsive UX Fixed) -->
     <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-amber-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer" onclick="switchView('student')">
-                <div class="w-12 h-12 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1">
-                    <svg viewBox="0 0 500 500" class="w-10 h-10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M250 40 L420 160 V420 H320 V280 H180 V420 H80 V160 Z" fill="#761527"/>
-                        <circle cx="250" cy="220" r="45" fill="#144B39"/>
-                        <path d="M160 380 Q250 310 340 380" stroke="#144B39" stroke-width="20" stroke-linecap="round"/>
-                        <circle cx="370" cy="240" r="30" fill="#761527"/>
-                        <circle cx="370" cy="240" r="12" fill="#FAF6F0"/>
-                    </svg>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer w-full sm:w-auto justify-between sm:justify-start" onclick="switchView('student')">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1">
+                        <svg viewBox="0 0 500 500" class="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M250 40 L420 160 V420 H320 V280 H180 V420 H80 V160 Z" fill="#761527"/>
+                            <circle cx="250" cy="220" r="45" fill="#144B39"/>
+                            <path d="M160 380 Q250 310 340 380" stroke="#144B39" stroke-width="20" stroke-linecap="round"/>
+                            <circle cx="370" cy="240" r="30" fill="#761527"/>
+                            <circle cx="370" cy="240" r="12" fill="#FAF6F0"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black primary-color tracking-wide">Sknk</h1>
+                        <p class="text-[10px] text-stone-500 font-semibold">سكنك .. أقرب لمستقبلك (المنيا)</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-black primary-color tracking-wide">Sknk</h1>
-                    <p class="text-xs text-stone-500 font-semibold">سكنك .. أقرب لمستقبلك (جامعة المنيا)</p>
-                </div>
+                <!-- Logout for mobile view header -->
+                <button onclick="logout()" class="sm:hidden text-xs text-red-600 font-bold px-3 py-1.5 bg-red-50 rounded-xl">خروج</button>
             </div>
 
-            <div class="flex items-center gap-3">
-                <button onclick="sharePlatform()" class="hidden md:flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm font-bold hover:bg-amber-100 transition">
+            <!-- Navigation Actions & Role Switcher -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto pb-1 sm:pb-0">
+                <button onclick="sharePlatform()" class="hidden md:flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold hover:bg-amber-100 transition">
                     📢 شارك المنصة
                 </button>
-                <div class="bg-stone-100 p-1 rounded-2xl flex border border-stone-200">
-                    <button id="btnStudent" onclick="switchView('student')" class="px-4 py-2 rounded-xl text-sm font-bold transition bg-primary text-white shadow-sm">
+                <div class="bg-stone-100 p-1 rounded-2xl flex border border-stone-200 flex-grow sm:flex-grow-0 justify-center">
+                    <button id="btnStudent" onclick="switchView('student')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
                         👨‍🎓 الطالب
                     </button>
-                    <button id="btnOwner" onclick="switchView('owner')" class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700 hover:text-primary">
+                    <button id="btnOwner" onclick="switchView('owner')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-primary">
                         🏠 المالك
                     </button>
-                    <button id="btnAdmin" onclick="switchView('admin')" class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700 hover:text-secondary">
+                    <button id="btnAdmin" onclick="switchView('admin')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-secondary">
                         ⚙️ الإدارة
                     </button>
                 </div>
-                <button onclick="logout()" class="text-xs text-red-600 font-bold px-3 py-2 bg-red-50 rounded-xl hover:bg-red-100 transition">خروج</button>
+                <button onclick="logout()" class="hidden sm:block text-xs text-red-600 font-bold px-3 py-2 bg-red-50 rounded-xl hover:bg-red-100 transition">خروج</button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
         <!-- STUDENT VIEW -->
         <div id="studentView" class="space-y-8">
-            <div class="bg-gradient-to-r from-[#761527] to-[#144B39] rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
+            <div class="bg-gradient-to-r from-[#761527] to-[#144B39] rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
                     <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">المنصة الرسمية لسكن طلاب جامعة المنيا</span>
-                    <h2 class="text-3xl sm:text-4xl font-black mt-3 leading-tight">اعثر على سكنك الجامعي المثالي قرب كليتك</h2>
-                    <p class="text-stone-100 mt-2 text-sm">جميع الوحدات معتمدة ومدارة بالكامل عبر إدارة Sknk لضمان حقوقك.</p>
+                    <h2 class="text-2xl sm:text-4xl font-black mt-3 leading-tight">اعثر على سكنك الجامعي المثالي قرب كليتك</h2>
+                    <p class="text-stone-100 mt-2 text-xs sm:text-sm">جميع الوحدات معتمدة ومدارة بالكامل عبر إدارة Sknk لضمان حقوقك.</p>
                     <div class="mt-6 flex flex-wrap gap-3">
-                        <button onclick="openMyBookings()" class="bg-white text-[#761527] font-bold px-6 py-3 rounded-2xl shadow hover:bg-amber-50 transition text-sm">
+                        <button onclick="openMyBookings()" class="bg-white text-[#761527] font-bold px-5 py-2.5 rounded-2xl shadow hover:bg-amber-50 transition text-xs sm:text-sm">
                             📋 متابعة حجوزاتي وطلباتي
                         </button>
-                        <button onclick="sharePlatform()" class="bg-amber-400/20 border border-white/30 text-white font-bold px-5 py-3 rounded-2xl hover:bg-amber-400/30 transition text-sm">
+                        <button onclick="sharePlatform()" class="bg-amber-400/20 border border-white/30 text-white font-bold px-4 py-2.5 rounded-2xl hover:bg-amber-400/30 transition text-xs sm:text-sm">
                             🔗 شارك المنصة مع زملائك
                         </button>
                     </div>
@@ -202,7 +207,6 @@
                 <div id="adminBookingsContainer" class="space-y-4"></div>
             </div>
         </div>
-
     </main>
 
     <!-- Footer & Social -->
@@ -220,19 +224,18 @@
     </footer>
 
     <!-- Modals -->
-    <div id="addListingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="addListingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 my-auto">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-lg font-bold text-stone-800">إضافة وحدة سكنية للإدارة</h3>
                 <button onclick="closeAddListingModal()" class="text-stone-400 font-bold">✕</button>
             </div>
             <form onsubmit="submitNewListing(event)" class="space-y-4 text-sm">
                 <div><label class="block font-bold mb-1">عنوان الوحدة المختصر</label><input type="text" id="propTitle" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="مثال: شقة مجهزة قريبة من البوابة"></div>
-                
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold mb-1">المنطقة (اكتبها بحرية)</label>
-                        <input type="text" id="propArea" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="مثال: حي شلبي، عدنان المالكي...">
+                        <label class="block font-bold mb-1">المنطقة</label>
+                        <input type="text" id="propArea" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="حي شلبي، عدنان المالكي...">
                     </div>
                     <div>
                         <label class="block font-bold mb-1">نوع السكن</label>
@@ -243,31 +246,26 @@
                         </select>
                     </div>
                 </div>
-
-                <div><label class="block font-bold mb-1">العنوان التفصيلي الدقيق (سري للإدارة فقط)</label><input type="text" id="propDetailedAddress" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="اسم الشارع، رقم العمارة، الدور..."></div>
-                
+                <div><label class="block font-bold mb-1">العنوان التفصيلي الدقيق (سري)</label><input type="text" id="propDetailedAddress" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="اسم الشارع، رقم العمارة..."></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block font-bold mb-1">الإيجار الشهري (ج.م)</label><input type="number" id="propPrice" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="5000"></div>
-                    <div><label class="block font-bold mb-1">رقم هاتف المالك (سري)</label><input type="text" id="propOwnerPhone" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="010XXXXXXXX"></div>
+                    <div><label class="block font-bold mb-1">الإيجار (ج.م)</label><input type="number" id="propPrice" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="5000"></div>
+                    <div><label class="block font-bold mb-1">هاتف المالك (سري)</label><input type="text" id="propOwnerPhone" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="010XXXXXXXX"></div>
                 </div>
-
                 <div class="grid grid-cols-3 gap-3">
                     <div><label class="block font-bold mb-1">الغرف</label><input type="number" id="propRooms" value="2" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                     <div><label class="block font-bold mb-1">الحمامات</label><input type="number" id="propBathrooms" value="1" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                     <div><label class="block font-bold mb-1">الاستيعاب</label><input type="number" id="propCapacity" value="3" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                 </div>
-
-                <div><label class="block font-bold mb-1">رابط صورة الوحدة (URL)</label><input type="url" id="propImage" value="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5"></div>
-                <div><label class="block font-bold mb-1">مواصفات السكن والمميزات</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي، أثاث كامل..."></textarea></div>
-                
-                <button type="submit" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition">إرسال الوحدة للإدارة للمراجعة</button>
+                <div><label class="block font-bold mb-1">رابط الصورة (URL)</label><input type="url" id="propImage" value="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5"></div>
+                <div><label class="block font-bold mb-1">مواصفات السكن</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي..."></textarea></div>
+                <button type="submit" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition">إرسال الوحدة للإدارة</button>
             </form>
         </div>
     </div>
 
     <!-- Property Details & Booking Modal -->
-    <div id="propertyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+    <div id="propertyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-6 my-auto">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 id="modalPropTitle" class="text-xl font-black text-stone-800">تفاصيل السكن</h3>
                 <button onclick="closePropertyModal()" class="text-stone-400 font-bold">✕</button>
@@ -277,8 +275,8 @@
     </div>
 
     <!-- My Bookings Modal -->
-    <div id="myBookingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="myBookingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 my-auto">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-lg font-bold text-stone-800">📋 حجوزاتي وطلباتي</h3>
                 <button onclick="closeMyBookings()" class="text-stone-400 font-bold">✕</button>
@@ -288,8 +286,8 @@
     </div>
 
     <!-- Social Modal -->
-    <div id="socialModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4">
+    <div id="socialModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 my-auto">
             <h3 id="socialModalTitle" class="text-xl font-bold">قنوات التواصل</h3>
             <p id="socialModalDesc" class="text-stone-500 text-sm">تواصل مع إدارة سكنك:</p>
             <div class="bg-stone-50 p-3 rounded-2xl border font-mono font-bold text-primary text-lg" id="socialModalValue">+20 100 000 2026</div>
@@ -372,21 +370,21 @@
             document.getElementById('ownerView').classList.add('hidden');
             document.getElementById('adminView').classList.add('hidden');
 
-            document.getElementById('btnStudent').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
-            document.getElementById('btnOwner').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
-            document.getElementById('btnAdmin').className = "px-4 py-2 rounded-xl text-sm font-bold transition text-stone-700";
+            document.getElementById('btnStudent').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
+            document.getElementById('btnOwner').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
+            document.getElementById('btnAdmin').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
 
             if(role === 'student') {
                 document.getElementById('studentView').classList.remove('hidden');
-                document.getElementById('btnStudent').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-primary text-white shadow-sm";
+                document.getElementById('btnStudent').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm";
                 renderStudentListings();
             } else if(role === 'owner') {
                 document.getElementById('ownerView').classList.remove('hidden');
-                document.getElementById('btnOwner').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-secondary text-white shadow-sm";
+                document.getElementById('btnOwner').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-secondary text-white shadow-sm";
                 renderOwnerListings();
             } else if(role === 'admin') {
                 document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('btnAdmin').className = "px-4 py-2 rounded-xl text-sm font-bold transition bg-emerald-900 text-white shadow-sm";
+                document.getElementById('btnAdmin').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-emerald-900 text-white shadow-sm";
                 renderAdminData();
             }
         }
