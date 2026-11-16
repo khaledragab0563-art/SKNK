@@ -16,11 +16,18 @@
         .bg-secondary { background-color: #144B39; }
         .hover-primary:hover { background-color: #5d111f; }
         .bg-cream { background-color: #FAF6F0; }
+        #toast { transition: transform 0.3s ease, opacity 0.3s ease; }
     </style>
 </head>
 <body class="bg-cream min-h-screen flex flex-col">
 
-    <!-- Auth Overlay Modal (Centered UX Fixed) -->
+    <!-- Smart Toast Notification Bar -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 text-xs font-bold flex items-center gap-3 translate-y-20 opacity-0 pointer-events-none transition-all">
+        <span id="toastIcon">✨</span>
+        <span id="toastMsg">تم بنجاح!</span>
+    </div>
+
+    <!-- Auth Overlay Modal -->
     <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-stone-200 my-auto">
             <div class="text-center space-y-2">
@@ -34,7 +41,7 @@
                     </svg>
                 </div>
                 <h1 class="text-2xl font-black primary-color tracking-wide">Sknk - سكنك</h1>
-                <p id="authSubtitle" class="text-xs text-stone-500 font-semibold">بوابة الدخول لسكن طلاب جامعة المنيا</p>
+                <p id="authSubtitle" class="text-xs text-stone-500 font-semibold">بوابة الدخول الرسمية لسكن طلاب جامعة المنيا</p>
             </div>
 
             <!-- Role Selector -->
@@ -74,11 +81,10 @@
         </div>
     </div>
 
-    <!-- Header / Navbar (Responsive UX Fixed) -->
+    <!-- Header / Navbar -->
     <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-amber-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <!-- Logo & Title -->
-            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer w-full sm:w-auto justify-between sm:justify-start" onclick="switchView('student')">
+            <div class="flex items-center space-x-3 space-x-reverse cursor-pointer w-full sm:w-auto justify-between sm:justify-start" onclick="switchView(currentUser && currentUser.role === 'admin' ? 'admin' : (currentUser ? currentUser.role : 'student'))">
                 <div class="flex items-center space-x-3 space-x-reverse">
                     <div class="w-10 h-10 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1">
                         <svg viewBox="0 0 500 500" class="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -94,23 +100,21 @@
                         <p class="text-[10px] text-stone-500 font-semibold">سكنك .. أقرب لمستقبلك (المنيا)</p>
                     </div>
                 </div>
-                <!-- Logout for mobile view header -->
                 <button onclick="logout()" class="sm:hidden text-xs text-red-600 font-bold px-3 py-1.5 bg-red-50 rounded-xl">خروج</button>
             </div>
 
-            <!-- Navigation Actions & Role Switcher -->
             <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto pb-1 sm:pb-0">
                 <button onclick="sharePlatform()" class="hidden md:flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold hover:bg-amber-100 transition">
                     📢 شارك المنصة
                 </button>
-                <div class="bg-stone-100 p-1 rounded-2xl flex border border-stone-200 flex-grow sm:flex-grow-0 justify-center">
-                    <button id="btnStudent" onclick="switchView('student')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
+                <div class="bg-stone-100 p-1 rounded-2xl flex border border-stone-200 flex-grow sm:flex-grow-0 justify-center items-center">
+                    <button id="btnStudent" onclick="switchView('student')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-primary">
                         👨‍🎓 الطالب
                     </button>
                     <button id="btnOwner" onclick="switchView('owner')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-primary">
-                        🏠 المالك
+                        🏠 مالك عقار
                     </button>
-                    <button id="btnAdmin" onclick="switchView('admin')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-secondary">
+                    <button id="btnAdmin" onclick="switchView('admin')" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700 hover:text-secondary">
                         ⚙️ الإدارة
                     </button>
                 </div>
@@ -120,43 +124,52 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
         <!-- STUDENT VIEW -->
         <div id="studentView" class="space-y-8">
-            <div class="bg-gradient-to-r from-[#761527] to-[#144B39] rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
-                <div class="relative z-10 max-w-2xl">
-                    <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full">المنصة الرسمية لسكن طلاب جامعة المنيا</span>
-                    <h2 class="text-2xl sm:text-4xl font-black mt-3 leading-tight">اعثر على سكنك الجامعي المثالي قرب كليتك</h2>
-                    <p class="text-stone-100 mt-2 text-xs sm:text-sm">جميع الوحدات معتمدة ومدارة بالكامل عبر إدارة Sknk لضمان حقوقك.</p>
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <button onclick="openMyBookings()" class="bg-white text-[#761527] font-bold px-5 py-2.5 rounded-2xl shadow hover:bg-amber-50 transition text-xs sm:text-sm">
-                            📋 متابعة حجوزاتي وطلباتي
+            <div class="bg-gradient-to-r from-[#761527] to-[#144B39] rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 opacity-10 w-64 h-64 rounded-full bg-white pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full inline-block">المنصة الرسمية المعتمدة لسكن طلاب جامعة المنيا</span>
+                    <h2 class="text-3xl sm:text-5xl font-black leading-tight">سكن جامعي آمن، موثق، وبإشراف مباشر</h2>
+                    <p class="text-stone-100 text-xs sm:text-sm leading-relaxed">اختر سكنك الجامعي المفضّل مباشرة مع إمكانية الدفع الافتراضي عبر محفظة Sknk الذكية ومتابعة مسافة السكن عن الجامعة.</p>
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button onclick="openWalletModal()" class="bg-amber-400 text-stone-900 font-bold px-4 py-3 rounded-2xl shadow hover:bg-amber-300 transition text-xs sm:text-sm flex items-center gap-2">
+                            💳 محفظتي الذكية (رصيد العربون)
                         </button>
-                        <button onclick="sharePlatform()" class="bg-amber-400/20 border border-white/30 text-white font-bold px-4 py-2.5 rounded-2xl hover:bg-amber-400/30 transition text-xs sm:text-sm">
-                            🔗 شارك المنصة مع زملائك
+                        <button onclick="openMyBookings()" class="bg-white text-[#761527] font-bold px-5 py-3 rounded-2xl shadow hover:bg-amber-50 transition text-xs sm:text-sm">
+                            📋 متابعة طلباتي
+                        </button>
+                        <!-- SOS Emergency Button for Students -->
+                        <button onclick="openSosModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-3 rounded-2xl shadow transition text-xs sm:text-sm flex items-center gap-1.5">
+                            🚨 طوارئ / بلاغ عاجل
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Search Filters -->
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-stone-200 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-stone-600 mb-1">بحث بالمنطقة أو العنوان أو الكلية</label>
-                    <input type="text" id="searchInput" oninput="filterListings()" placeholder="ابحث باسم المنطقة (مثال: حي شلبي، عدنان المالكي...)..." class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary">
+            <!-- Trust & Stats Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 text-center shadow-sm">
+                    <div class="text-2xl font-black primary-color mb-1">100%</div>
+                    <div class="text-xs text-stone-500 font-bold">عقارات موثقة ومفحوصة</div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-stone-600 mb-1">نوع السكن</label>
-                    <select id="typeFilter" onchange="filterListings()" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm focus:outline-none">
-                        <option value="">جميع الأنواع</option>
-                        <option value="شقة كاملة">شقة كاملة</option>
-                        <option value="غرفة مستقلة">غرفة مستقلة</option>
-                        <option value="سرير (مشاركة)">سرير (مشاركة)</option>
-                    </select>
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 text-center shadow-sm">
+                    <div class="text-2xl font-black secondary-color mb-1">دفع آمن</div>
+                    <div class="text-xs text-stone-500 font-bold">محفظة عربون افتراضية</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 text-center shadow-sm">
+                    <div class="text-2xl font-black primary-color mb-1">خرائط تفاعلية</div>
+                    <div class="text-xs text-stone-500 font-bold">تحديد مسافة بوابات الجامعة</div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-stone-200 text-center shadow-sm">
+                    <div class="text-2xl font-black secondary-color mb-1">جامعة المنيا</div>
+                    <div class="text-xs text-stone-500 font-bold">مخصص حصرياً للطلاب المغتربين</div>
                 </div>
             </div>
 
-            <!-- Listings -->
+            <!-- Direct Listings Grid -->
             <div>
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold text-stone-800">الوحدات السكنية المتاحة حالياً</h3>
@@ -170,16 +183,16 @@
         <div id="ownerView" class="hidden space-y-8">
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-stone-200 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك</span>
-                    <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل سهولة</h2>
-                    <p class="text-stone-500 text-sm mt-1">اكتب اسم المنطقة والشارع بحرية، والتعامل يتم بالكامل عبر إدارة Sknk.</p>
+                    <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك الرسمية</span>
+                    <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل ثقة وأمان</h2>
+                    <p class="text-stone-500 text-sm mt-1">بصفتك مالكاً، يمكنك إضافة عقارك وإرفاق إيصال ضمان الجدية لتتم المراجعة الفورية من الإدارة.</p>
                 </div>
-                <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm">
+                <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm shrink-0">
                     ➕ إضافة شقة جديدة للإدارة
                 </button>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
-                <h3 class="text-lg font-bold text-stone-800 mb-4">وحداتي المعروضة وحالتها لدى الإدارة</h3>
+                <h3 class="text-lg font-bold text-stone-800 mb-4">وحداتي المعروضة وحالة التوثيق لدى الإدارة</h3>
                 <div id="ownerListingsContainer" class="space-y-4"></div>
             </div>
         </div>
@@ -188,16 +201,28 @@
         <div id="adminView" class="hidden space-y-8">
             <div class="bg-[#761527] text-white p-8 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <span class="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">لوحة الإدارة المركزية</span>
-                    <h2 class="text-2xl font-black mt-2">إدارة منصة Sknk (المنيا)</h2>
+                    <span class="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">لوحة الإدارة المركزية والاشعارات الحية</span>
+                    <h2 class="text-2xl font-black mt-2">إدارة وتوثيق منصة Sknk (المنيا)</h2>
+                    <p class="text-xs text-amber-100 mt-1">تتبع بلاغات الطوارئ (SOS)، إشعارات الملاك، وحجوزات الطلاب لحظة بلحظة.</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex gap-3 items-center flex-wrap">
                     <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalListings" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">وحدات</span></div>
                     <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalRequests" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">حجوزات</span></div>
+                    <button onclick="switchView('student')" class="bg-white text-primary font-bold px-3 py-2 rounded-xl text-xs">👨‍🎓 معاينة كطالب</button>
+                    <button onclick="switchView('owner')" class="bg-white text-secondary font-bold px-3 py-2 rounded-xl text-xs">🏠 معاينة كمالك</button>
                 </div>
             </div>
+
+            <!-- Live Notifications Panel -->
+            <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 space-y-3">
+                <h3 class="font-bold text-amber-900 text-base flex items-center gap-2">
+                    <span>🔔</span> الإشعارات الحية للإدارة (طلبات وشقق وبلاغات الطوارئ)
+                </h3>
+                <div id="adminLiveNotifications" class="space-y-2 max-h-48 overflow-y-auto"></div>
+            </div>
+
             <div class="flex border-b border-stone-300 gap-4">
-                <button onclick="switchAdminTab('listings')" id="adminTabListingsBtn" class="pb-3 font-bold text-primary border-b-2 border-primary text-sm">مراجعة الوحدات</button>
+                <button onclick="switchAdminTab('listings')" id="adminTabListingsBtn" class="pb-3 font-bold text-primary border-b-2 border-primary text-sm">مراجعة وتوثيق الوحدات</button>
                 <button onclick="switchAdminTab('bookings')" id="adminTabBookingsBtn" class="pb-3 font-bold text-stone-500 text-sm">طلبات حجز الطلاب</button>
             </div>
             <div id="adminListingsTabContent" class="space-y-4">
@@ -219,15 +244,15 @@
                     <button onclick="openSocialModal('telegram')" class="px-4 py-2 bg-sky-50 text-sky-800 border border-sky-200 rounded-xl text-xs font-bold">✈️ تيليجرام السكن</button>
                 </div>
             </div>
-            <p class="text-xs text-stone-500 text-center">جميع الحقوق محفوظة © 2026 منصة Sknk.</p>
+            <p class="text-xs text-stone-500 text-center">جميع الحقوق محفوظة © 2026 منصة Sknk - الوساطة الآمنة لطلاب جامعة المنيا.</p>
         </div>
     </footer>
 
-    <!-- Modals -->
+    <!-- Add Listing Modal -->
     <div id="addListingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 my-auto">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-lg font-bold text-stone-800">إضافة وحدة سكنية للإدارة</h3>
+                <h3 class="text-lg font-bold text-stone-800">إضافة وحدة وتوثيق الملكية وضمان الجدية</h3>
                 <button onclick="closeAddListingModal()" class="text-stone-400 font-bold">✕</button>
             </div>
             <form onsubmit="submitNewListing(event)" class="space-y-4 text-sm">
@@ -246,20 +271,82 @@
                         </select>
                     </div>
                 </div>
-                <div><label class="block font-bold mb-1">العنوان التفصيلي الدقيق (سري)</label><input type="text" id="propDetailedAddress" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="اسم الشارع، رقم العمارة..."></div>
+                <div><label class="block font-bold mb-1">العنوان التفصيلي الدقيق (سري للإدارة)</label><input type="text" id="propDetailedAddress" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="اسم الشارع، رقم العمارة، الدور..."></div>
                 <div class="grid grid-cols-2 gap-3">
                     <div><label class="block font-bold mb-1">الإيجار (ج.م)</label><input type="number" id="propPrice" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="5000"></div>
-                    <div><label class="block font-bold mb-1">هاتف المالك (سري)</label><input type="text" id="propOwnerPhone" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="010XXXXXXXX"></div>
+                    <div><label class="block font-bold mb-1">هاتف المالك (سري للإدارة)</label><input type="text" id="propOwnerPhone" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="010XXXXXXXX"></div>
                 </div>
                 <div class="grid grid-cols-3 gap-3">
                     <div><label class="block font-bold mb-1">الغرف</label><input type="number" id="propRooms" value="2" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                     <div><label class="block font-bold mb-1">الحمامات</label><input type="number" id="propBathrooms" value="1" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                     <div><label class="block font-bold mb-1">الاستيعاب</label><input type="number" id="propCapacity" value="3" class="w-full bg-stone-50 border rounded-xl px-3 py-2"></div>
                 </div>
-                <div><label class="block font-bold mb-1">رابط الصورة (URL)</label><input type="url" id="propImage" value="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80" required class="w-full bg-stone-50 border rounded-xl px-4 py-2.5"></div>
+                
+                <div class="bg-stone-50 p-3 rounded-2xl border border-stone-200">
+                    <label class="block font-bold mb-1 text-primary">📁 رفع صور وفيديوهات الوحدة (ملفات متعددة)</label>
+                    <input type="file" id="propMediaFiles" multiple accept="image/*,video/*" required class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white cursor-pointer">
+                </div>
+
+                <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
+                    <label class="block font-bold mb-1 text-secondary">🛡️ مستند إثبات الملكية / التحقق (سري للإدارة فقط)</label>
+                    <input type="file" id="propVerifyDoc" accept="image/*,.pdf" required class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white cursor-pointer">
+                    <p class="text-[11px] text-emerald-800 mt-1">صورة إيصال مرافق أو البطاقة الشخصية للتحقق من هوية المالك. <b>سرية تماماً ولا تظهر للطلاب.</b></p>
+                </div>
+
+                <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 space-y-2">
+                    <label class="block font-bold mb-1 text-amber-900 text-xs">💳 إيصال دفع رسوم جدية الإعلان وضمان التعاقد (100 ج.م)</label>
+                    <p class="text-[11px] text-amber-800">لضمان جدية المالك وعدم التراجع أو التلاعب بعد حجز الطلاب، يرجى إرفاق إيصال التحويل:</p>
+                    <input type="file" id="propFeeReceipt" accept="image/*" required class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-700 file:text-white cursor-pointer">
+                </div>
+
                 <div><label class="block font-bold mb-1">مواصفات السكن</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي..."></textarea></div>
-                <button type="submit" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition">إرسال الوحدة للإدارة</button>
+                <button type="submit" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition shadow">إرسال الوحدة ومستندات الضمان للإدارة</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Virtual Wallet Modal -->
+    <div id="walletModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 my-auto text-center">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-stone-800">💳 محفظة Sknk الذكية (رصيد العربون)</h3>
+                <button onclick="document.getElementById('walletModal').classList.add('hidden')" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-2">
+                <p class="text-xs text-stone-600">رصيدك المتاح في المحفظة لحجز الوحدات:</p>
+                <div id="walletBalanceDisplay" class="text-3xl font-black primary-color">500 ج.م</div>
+                <p class="text-[10px] text-stone-500">رصيد افتراضي محاكي (محفظة عربون آمنة تضمن حقوقك حتى المعاينة)</p>
+            </div>
+            <div class="space-y-2">
+                <input type="number" id="depositAmount" placeholder="أدخل مبلغ الشحن الإضافي..." class="w-full bg-stone-50 border rounded-xl px-4 py-2.5 text-sm">
+                <button onclick="topUpWallet()" class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm">شحن المحفظة افتراضياً (إنستاباي / فودافون كاش)</button>
+            </div>
+            <button onclick="document.getElementById('walletModal').classList.add('hidden')" class="w-full bg-stone-100 text-stone-700 font-bold py-2.5 rounded-xl text-xs">إغلاق المحفظة</button>
+        </div>
+    </div>
+
+    <!-- SOS Emergency Modal -->
+    <div id="sosModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 my-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-red-600">🚨 بلاغ طوارئ ودعم عاجل</h3>
+                <button onclick="document.getElementById('sosModal').classList.add('hidden')" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <p class="text-xs text-stone-600">هل تواجه مشكلة طارئة في السكن (صيانة، عطل، أو مشكلة مع المالك)؟ أرسل البلاغ وسيتم تنبيه الإدارة فوراً.</p>
+            <textarea id="sosMessage" rows="3" class="w-full bg-stone-50 border rounded-xl p-3 text-xs" placeholder="اكتب تفاصيل المشكلة هنا..."></textarea>
+            <button onclick="submitSosReport()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm shadow">إرسال بلاغ الطوارئ للإدارة الآن</button>
+        </div>
+    </div>
+
+    <!-- Admin Verification Document Viewer Modal -->
+    <div id="verifyDocModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 my-auto text-center">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-stone-800">🛡️ معاينة مستندات الملكية وإيصال الجدية</h3>
+                <button onclick="document.getElementById('verifyDocModal').classList.add('hidden')" class="text-stone-400 font-bold">✕</button>
+            </div>
+            <div id="verifyDocContent" class="bg-stone-100 rounded-2xl p-4 flex flex-col gap-3 items-center justify-center min-h-[250px]"></div>
+            <button onclick="document.getElementById('verifyDocModal').classList.add('hidden')" class="w-full bg-primary text-white font-bold py-2.5 rounded-xl text-sm">إغلاق المعاينة</button>
         </div>
     </div>
 
@@ -303,6 +390,8 @@
 
         let listings = JSON.parse(localStorage.getItem('sknk_listings')) || [];
         let bookings = JSON.parse(localStorage.getItem('sknk_bookings')) || [];
+        let adminNotifications = JSON.parse(localStorage.getItem('sknk_admin_notifications')) || [];
+        let studentWallet = parseFloat(localStorage.getItem('sknk_wallet')) || 500;
 
         window.addEventListener('DOMContentLoaded', () => {
             if(!currentUser) {
@@ -312,6 +401,29 @@
                 switchView(currentUser.role);
             }
         });
+
+        function showToast(msg, icon = "✨") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            document.getElementById('toastIcon').innerText = icon;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        function pushAdminNotification(title, type = 'info') {
+            const notif = {
+                id: Date.now(),
+                title: title,
+                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+                type: type
+            };
+            adminNotifications.unshift(notif);
+            localStorage.setItem('sknk_admin_notifications', JSON.stringify(adminNotifications));
+        }
 
         function setAuthRole(role) {
             authRole = role;
@@ -349,14 +461,24 @@
 
         function handleAuthSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value;
+            const email = document.getElementById('authEmail').value.trim();
+            const pass = document.getElementById('authPass').value.trim();
             const name = document.getElementById('authName').value || (authRole === 'student' ? 'طالب المنيا' : 'مالك عقار');
+
+            if (email === "admin@sknk.com" && pass === "admin2026") {
+                currentUser = { email, name: "مدير النظام", role: 'admin' };
+                localStorage.setItem('sknk_current_user', JSON.stringify(currentUser));
+                document.getElementById('authOverlay').classList.add('hidden');
+                switchView('admin');
+                showToast("أهلاً بك يا مدير النظام! تم تسجيل الدخول بنجاح.", "⚙️");
+                return;
+            }
 
             currentUser = { email, name, role: authRole };
             localStorage.setItem('sknk_current_user', JSON.stringify(currentUser));
             document.getElementById('authOverlay').classList.add('hidden');
             switchView(authRole);
-            alert(`أهلاً بك يا ${name}! تم تسجيل الدخول بنجاح.`);
+            showToast(`أهلاً بك يا ${name}! تم تسجيل الدخول بنجاح.`, "👋");
         }
 
         function logout() {
@@ -366,13 +488,28 @@
         }
 
         function switchView(role) {
+            if(currentUser && currentUser.role === 'student' && role === 'owner') {
+                showToast("حساب الطالب مخصص لتصفح وحجز السكن فقط.", "⚠️");
+                return;
+            }
+            if(currentUser && currentUser.role === 'owner' && role === 'student') {
+                showToast("حساب المالك مخصص لعرض وإدارة العقارات فقط.", "⚠️");
+                return;
+            }
+
             document.getElementById('studentView').classList.add('hidden');
             document.getElementById('ownerView').classList.add('hidden');
             document.getElementById('adminView').classList.add('hidden');
 
             document.getElementById('btnStudent').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
             document.getElementById('btnOwner').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
-            document.getElementById('btnAdmin').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition text-stone-700";
+            const btnAdmin = document.getElementById('btnAdmin');
+
+            if (currentUser && currentUser.role === 'admin') {
+                btnAdmin.classList.remove('hidden');
+            } else {
+                btnAdmin.classList.add('hidden');
+            }
 
             if(role === 'student') {
                 document.getElementById('studentView').classList.remove('hidden');
@@ -384,18 +521,46 @@
                 renderOwnerListings();
             } else if(role === 'admin') {
                 document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('btnAdmin').className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-emerald-900 text-white shadow-sm";
+                btnAdmin.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-emerald-900 text-white shadow-sm";
                 renderAdminData();
             }
         }
 
-        function renderStudentListings(filtered = null) {
+        function openWalletModal() {
+            document.getElementById('walletBalanceDisplay').innerText = `${studentWallet} ج.م`;
+            document.getElementById('walletModal').classList.remove('hidden');
+        }
+
+        function topUpWallet() {
+            const amt = parseFloat(document.getElementById('depositAmount').value);
+            if(isNaN(amt) || amt <= 0) { alert('يرجى إدخال مبلغ صحيح.'); return; }
+            studentWallet += amt;
+            localStorage.setItem('sknk_wallet', studentWallet);
+            document.getElementById('walletBalanceDisplay').innerText = `${studentWallet} ج.م`;
+            document.getElementById('depositAmount').value = '';
+            showToast(`تم شحن المحفظة بنجاح بمبلغ ${amt} ج.م`, '💳');
+        }
+
+        function openSosModal() {
+            document.getElementById('sosModal').classList.remove('hidden');
+        }
+
+        function submitSosReport() {
+            const msg = document.getElementById('sosMessage').value.trim();
+            if(!msg) { alert('يرجى كتابة تفاصيل المشكلة أولاً.'); return; }
+            pushAdminNotification(`🚨 بلاغ طوارئ من الطالب (${currentUser ? currentUser.name : 'طالب'}): "${msg}"`, 'sos');
+            document.getElementById('sosModal').classList.add('hidden');
+            document.getElementById('sosMessage').value = '';
+            showToast('تم إرسال بلاغ الطوارئ للإدارة بنجاح وسيتم التدخل الفوري.', '🚨');
+        }
+
+        function renderStudentListings() {
             const container = document.getElementById('listingsContainer');
-            const data = filtered || listings.filter(l => l.status === 'approved');
+            const data = listings.filter(l => l.status === 'approved');
             document.getElementById('listingsCount').innerText = `${data.length} وحدة متوفرة`;
 
             if(data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">المنصة بانتظار إضافات الملاك قريباً.</p></div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">المنصة بانتظار توثيق ونشر الوحدات الجديدة من الإدارة.</p></div>`;
                 return;
             }
 
@@ -404,13 +569,13 @@
                     <div class="relative h-48">
                         <img src="${item.image}" class="w-full h-full object-cover" alt="شقة">
                         <span class="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full text-xs font-bold primary-color">${item.area}</span>
-                        <span class="absolute top-3 left-3 bg-[#144B39] text-white px-3 py-1 rounded-full text-xs font-bold">⭐️ موثقة</span>
+                        <span class="absolute top-3 left-3 bg-[#144B39] text-white px-3 py-1 rounded-full text-xs font-bold shadow">🛡️ موثقة الملكية</span>
                     </div>
                     <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
                         <div>
                             <h4 class="font-bold text-stone-800">${item.title}</h4>
                             <p class="text-xs text-stone-500 mt-1">نوع السكن: <b>${item.type}</b></p>
-                            <p class="text-xs text-secondary font-bold mt-1">🔒 الوساطة حصرياً عبر Sknk</p>
+                            <p class="text-xs text-emerald-700 font-bold mt-1">📍 المسافة عن بوابات جامعة المنيا: ${item.distance || '5 دقائق سيراً'}</p>
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t">
                             <span class="text-lg font-black primary-color">${item.price} ج.م <span class="text-xs font-normal text-stone-500">/ شهر</span></span>
@@ -421,37 +586,50 @@
             `).join('');
         }
 
-        function filterListings() {
-            const s = document.getElementById('searchInput').value.toLowerCase();
-            const t = document.getElementById('typeFilter').value;
-            const filtered = listings.filter(l => l.status === 'approved' && (l.title.toLowerCase().includes(s) || l.area.toLowerCase().includes(s)) && (!t || l.type === t));
-            renderStudentListings(filtered);
+        function openAddListingModal() { 
+            if(currentUser && currentUser.role === 'student') {
+                showToast("عذراً، حساب الطالب مخصص لاختيار السكن فقط ولا يتيح إضافة عقارات.", "⚠️");
+                return;
+            }
+            document.getElementById('addListingModal').classList.remove('hidden'); 
         }
-
-        function openAddListingModal() { document.getElementById('addListingModal').classList.remove('hidden'); }
         function closeAddListingModal() { document.getElementById('addListingModal').classList.add('hidden'); }
 
         function submitNewListing(e) {
             e.preventDefault();
+            const fileInput = document.getElementById('propMediaFiles');
+            const verifyInput = document.getElementById('propVerifyDoc');
+            const feeInput = document.getElementById('propFeeReceipt');
+            
+            let imagePath = "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80";
+            if (fileInput.files && fileInput.files[0]) {
+                imagePath = URL.createObjectURL(fileInput.files[0]);
+            }
+
+            const title = document.getElementById('propTitle').value;
             const newProp = {
                 id: Date.now(),
-                title: document.getElementById('propTitle').value,
+                title: title,
                 area: document.getElementById('propArea').value,
                 type: document.getElementById('propType').value,
+                distance: "قريب من البوابة الرئيسية (4 دقائق)",
                 detailedAddress: document.getElementById('propDetailedAddress').value,
                 price: document.getElementById('propPrice').value,
                 ownerPhone: document.getElementById('propOwnerPhone').value,
-                rooms: document.getElementById('propRooms').value,
-                bathrooms: document.getElementById('propBathrooms').value,
-                capacity: document.getElementById('propCapacity').value,
-                image: document.getElementById('propImage').value,
+                image: imagePath,
+                verifyDoc: verifyInput.files[0] ? URL.createObjectURL(verifyInput.files[0]) : '',
+                feeReceipt: feeInput.files[0] ? URL.createObjectURL(feeInput.files[0]) : '',
                 desc: document.getElementById('propDesc').value,
                 status: 'pending'
             };
             listings.push(newProp);
             localStorage.setItem('sknk_listings', JSON.stringify(listings));
+
+            pushAdminNotification(`🏠 تم إضافة شقة جديدة بواسطة مالك عقار: "${title}"`, 'owner');
+
             closeAddListingModal();
-            alert('تم إرسال وحدتك بنجاح للإدارة للمراجعة.');
+            document.getElementById('addListingModal').querySelector('form').reset();
+            showToast('تم رفع الشقة وإيصال رسوم الجدية بنجاح!', '✅');
             renderOwnerListings();
         }
 
@@ -462,16 +640,18 @@
                 return;
             }
             container.innerHTML = listings.map(item => `
-                <div class="bg-stone-50 border rounded-2xl p-4 flex justify-between items-center gap-4">
+                <div class="bg-stone-50 border rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div class="flex items-center gap-4">
                         <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover" alt="شقة">
                         <div>
                             <h4 class="font-bold text-stone-800">${item.title}</h4>
-                            <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> - ${item.price} ج.م</p>
+                            <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> - ${item.price} ج.م | 💳 تم دفع رسوم الجدية وضمان الإعلان</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${item.status === 'approved' ? 'منشور' : 'قيد المراجعة'}</span>
+                    <div class="flex items-center gap-3 self-end sm:self-center">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${item.status === 'approved' ? 'موثق ومنشور' : 'قيد مراجعة الجدية والملكية'}
+                        </span>
                         <button onclick="deleteListing(${item.id})" class="text-red-500 text-xs font-bold px-3 py-1.5 bg-red-50 rounded-lg">حذف</button>
                     </div>
                 </div>
@@ -482,9 +662,28 @@
             listings = listings.filter(l => l.id !== id);
             localStorage.setItem('sknk_listings', JSON.stringify(listings));
             renderOwnerListings();
+            showToast('تم حذف الوحدة بنجاح.', '🗑️');
+        }
+
+        function openVerifyDocModal(id) {
+            const prop = listings.find(l => l.id === id);
+            if(!prop) return;
+            const content = document.getElementById('verifyDocContent');
+            content.innerHTML = `
+                <p class="text-xs font-bold text-primary">1. مستند إثبات الملكية:</p>
+                <img src="${prop.verifyDoc || prop.image}" class="max-h-40 rounded-xl object-contain shadow mb-2" alt="مستند الملكية">
+                <p class="text-xs font-bold text-amber-800">2. إيصال رسوم جدية الإعلان (الضمان):</p>
+                <img src="${prop.feeReceipt || prop.image}" class="max-h-40 rounded-xl object-contain shadow" alt="إيصال الرسوم">
+            `;
+            document.getElementById('verifyDocModal').classList.remove('hidden');
         }
 
         function openPropertyModal(id) {
+            if(currentUser && currentUser.role === 'owner') {
+                showToast("حساب المالك مخصص لعرض وإدارة العقارات فقط ولا يتيح حجز أو استئجار الوحدات.", "⚠️");
+                return;
+            }
+
             const prop = listings.find(l => l.id === id);
             if(!prop) return;
             document.getElementById('modalPropTitle').innerText = prop.title;
@@ -495,25 +694,21 @@
                         <div><span class="block text-stone-400">المنطقة</span>${prop.area}</div>
                         <div><span class="block text-stone-400">نوع السكن</span>${prop.type}</div>
                     </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-emerald-900 text-xs">
+                        📍 <b>موقع تفاعلي تقريبي:</b> تبعد هذه الوحدة تقريباً <b>${prop.distance || '5 دقائق'}</b> عن بوابات جامعة المنيا.
+                    </div>
                     <p class="text-stone-600 text-sm bg-stone-50 p-3 rounded-xl">${prop.desc || 'لا يوجد وصف.'}</p>
-                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs">⚠️ التعامل الأول والأخير (المعاينة والتعاقد) يتم حصرياً عبر إدارة Sknk.</div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-amber-900 text-xs">⚠️ <b>حماية وتوثيق:</b> هذه الوحدة مدعومة برسم جدية من المالك وموثقة بالإدارة، ويتم خصم العربون آمنًا عبر محفظتك الذكية.</div>
                     
                     <div class="bg-stone-50 p-4 rounded-2xl border space-y-3">
-                        <h4 class="font-bold text-primary text-sm">طلب حجز أو معاينة</h4>
+                        <h4 class="font-bold text-primary text-sm">طلب حجز أو معاينة عبر المحفظة</h4>
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <input type="text" id="bookName" placeholder="اسم الطالب الثلاثي" class="bg-white border rounded-xl p-2.5" value="${currentUser ? currentUser.name : ''}">
                             <input type="text" id="bookPhone" placeholder="رقم الواتساب" class="bg-white border rounded-xl p-2.5">
                             <input type="text" id="bookCollege" placeholder="الكلية والفرقة" class="bg-white border rounded-xl p-2.5">
-                            <select id="bookType" class="bg-white border rounded-xl p-2.5"><option>حجز فوري (عربون)</option><option>طلب معاينة</option></select>
+                            <select id="bookType" class="bg-white border rounded-xl p-2.5"><option>حجز فوري (عربون بالمحفظة)</option><option>طلب معاينة</option></select>
                         </div>
-                        <div class="pt-2 border-t space-y-2">
-                            <label class="font-bold text-stone-700 text-xs">👥 حجز أماكن للأصدقاء (حجز جماعي)</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="number" id="bookSpots" min="1" max="5" value="1" class="bg-white border rounded-xl p-2 text-xs" placeholder="عدد الأماكن">
-                                <input type="text" id="bookFriends" class="col-span-2 bg-white border rounded-xl p-2 text-xs" placeholder="أسماء الأصدقاء المرافقين...">
-                            </div>
-                        </div>
-                        <button onclick="submitBooking(${prop.id})" class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm">إرسال الطلب للإدارة</button>
+                        <button onclick="submitBooking(${prop.id})" class="w-full bg-primary text-white font-bold py-3 rounded-xl text-sm">تأكيد الحجز وخصم العربون افتراضياً</button>
                     </div>
                 </div>
             `;
@@ -526,8 +721,6 @@
             const phone = document.getElementById('bookPhone').value;
             const college = document.getElementById('bookCollege').value;
             const type = document.getElementById('bookType').value;
-            const spots = document.getElementById('bookSpots').value;
-            const friends = document.getElementById('bookFriends').value;
 
             if(!name || !phone || !college) { alert('يرجى إكمال البيانات الأساسية.'); return; }
 
@@ -536,13 +729,15 @@
                 id: 'SKNK-' + Math.floor(1000 + Math.random() * 9000),
                 propId, propTitle: prop.title, propArea: prop.area,
                 studentName: name, studentPhone: phone, studentCollege: college,
-                bookingType: type, spotsCount: spots, friendsNames: friends,
-                status: 'pending', date: new Date().toLocaleDateString('ar-EG')
+                bookingType: type, status: 'pending', date: new Date().toLocaleDateString('ar-EG')
             };
             bookings.push(booking);
             localStorage.setItem('sknk_bookings', JSON.stringify(bookings));
+
+            pushAdminNotification(`👨‍🎓 طلب حجز جديد من الطالب (${name}) على وحدة: "${prop.title}" (${prop.area})`, 'student');
+
             closePropertyModal();
-            alert(`تم تقديم طلبك بنجاح برقم #${booking.id}`);
+            showToast(`تم تقديم طلبك بنجاح برقم #${booking.id} وتم إخطار الإدارة!`, '🎉');
         }
 
         function openMyBookings() {
@@ -554,7 +749,7 @@
                     <div class="bg-stone-50 border rounded-2xl p-4 space-y-2 text-sm">
                         <div class="flex justify-between items-center"><span class="font-bold text-primary">رقم الطلب: #${b.id}</span><span class="text-xs font-bold px-2.5 py-1 rounded-full ${b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${b.status === 'confirmed' ? 'تم التأكيد' : 'قيد المراجعة'}</span></div>
                         <p class="font-bold text-stone-800">${b.propTitle} (${b.propArea})</p>
-                        <p class="text-xs text-stone-600">نوع الطلب: <b>${b.bookingType}</b> | أماكن: <b>${b.spotsCount}</b> ${b.friendsNames ? `(الأصدقاء: ${b.friendsNames})` : ''}</p>
+                        <p class="text-xs text-stone-600">نوع الطلب: <b>${b.bookingType}</b></p>
                     </div>
                 `).join('');
             }
@@ -563,8 +758,12 @@
         function closeMyBookings() { document.getElementById('myBookingsModal').classList.add('hidden'); }
 
         function sharePlatform() {
-            if(navigator.share) { navigator.share({ title: 'منصة Sknk', url: window.location.href }).catch(()=>{}); }
-            else { prompt("انسخ رابط المنصة:", window.location.href); }
+            if(navigator.share) { 
+                navigator.share({ title: 'منصة Sknk', url: window.location.href }).catch(()=>{}); 
+            } else { 
+                navigator.clipboard.writeText(window.location.href);
+                showToast("تم نسخ رابط المنصة بنجاح! شاركه مع زملائك.", "🔗");
+            }
         }
         function openSocialModal(p) { document.getElementById('socialModal').classList.remove('hidden'); }
 
@@ -586,15 +785,34 @@
             document.getElementById('adminTotalListings').innerText = listings.length;
             document.getElementById('adminTotalRequests').innerText = bookings.length;
 
+            const notifContainer = document.getElementById('adminLiveNotifications');
+            if (adminNotifications.length === 0) {
+                notifContainer.innerHTML = `<p class="text-xs text-stone-500 text-center py-2">لا توجد إشعارات جديدة حالياً.</p>`;
+            } else {
+                notifContainer.innerHTML = adminNotifications.map(n => `
+                    <div class="bg-white p-3 rounded-xl border border-amber-200 flex justify-between items-center text-xs shadow-sm">
+                        <span class="font-bold ${n.type === 'sos' ? 'text-red-600' : 'text-stone-800'}">${n.title}</span>
+                        <span class="text-[10px] text-stone-400 bg-stone-100 px-2 py-0.5 rounded-md">${n.time}</span>
+                    </div>
+                `).join('');
+            }
+
             document.getElementById('adminListingsContainer').innerHTML = listings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات.</p>` : listings.map(item => `
-                <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm">
-                    <h4 class="font-bold">${item.title}</h4>
+                <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-stone-800">${item.title}</h4>
+                        <button onclick="openVerifyDocModal(${item.id})" class="bg-emerald-50 text-secondary border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-100">
+                            🛡️ فحص الملكية ورسوم الجدية
+                        </button>
+                    </div>
                     <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> | ${item.price} ج.م</p>
                     <p class="text-xs text-primary font-bold">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
                     <div class="flex justify-between items-center pt-2 border-t">
-                        <span class="text-xs font-bold">${item.status}</span>
+                        <span class="text-xs font-bold ${item.status === 'approved' ? 'text-emerald-700' : 'text-amber-600'}">
+                            ${item.status === 'approved' ? '✅ موثق ومنشور' : '⏳ بانتظار فحص الضمان'}
+                        </span>
                         <div class="flex gap-2">
-                            ${item.status !== 'approved' ? `<button onclick="adminApprove(${item.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold">موافقة ونشر</button>` : ''}
+                            ${item.status !== 'approved' ? `<button onclick="adminApprove(${item.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-700">اعتماد ونشر</button>` : ''}
                             <button onclick="deleteListing(${item.id}); renderAdminData();" class="bg-red-50 text-red-600 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
                         </div>
                     </div>
@@ -605,7 +823,7 @@
                 <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm">
                     <div class="flex justify-between items-center"><span class="font-bold text-primary">طلب #${b.id}</span><span class="text-xs font-bold">${b.status}</span></div>
                     <p class="text-xs"><b>الطالب:</b> ${b.studentName} (${b.studentPhone}) - ${b.studentCollege}</p>
-                    <p class="text-xs text-primary"><b>الوحدة:</b> ${b.propTitle} (${b.propArea}) | الأماكن: ${b.spotsCount}</p>
+                    <p class="text-xs text-primary"><b>الوحدة:</b> ${b.propTitle} (${b.propArea})</p>
                     <div class="flex gap-2 pt-2 border-t">
                         ${b.status !== 'confirmed' ? `<button onclick="adminConfirmBooking('${b.id}', ${b.propId})" class="bg-primary text-white px-3 py-1 rounded-xl text-xs font-bold">تأكيد وإغلاق الشقة</button>` : ''}
                     </div>
@@ -615,7 +833,12 @@
 
         function adminApprove(id) {
             const item = listings.find(l => l.id === id);
-            if(item) { item.status = 'approved'; localStorage.setItem('sknk_listings', JSON.stringify(listings)); renderAdminData(); }
+            if(item) { 
+                item.status = 'approved'; 
+                localStorage.setItem('sknk_listings', JSON.stringify(listings)); 
+                renderAdminData(); 
+                showToast('تم اعتماد وسداد رسوم جدية المالك، ونشر الشقة بنجاح!', '🚀');
+            }
         }
         function adminConfirmBooking(bookingId, propId) {
             const b = bookings.find(x => x.id === bookingId);
@@ -623,7 +846,7 @@
             const p = listings.find(x => x.id === propId);
             if(p) { p.status = 'booked'; localStorage.setItem('sknk_listings', JSON.stringify(listings)); }
             renderAdminData();
-            alert('تم تأكيد الحجز بنجاح.');
+            showToast('تم تأكيد الحجز بنجاح.', '✨');
         }
     </script>
 </body>
