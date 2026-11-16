@@ -29,7 +29,7 @@
 
     <!-- Auth Overlay Modal -->
     <div id="authOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto hidden">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-stone-200 my-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-stone-200 my-auto">
             <div class="text-center space-y-2">
                 <div class="w-16 h-16 flex items-center justify-center bg-amber-50 rounded-full border border-amber-200 p-1 mx-auto">
                     <svg viewBox="0 0 500 500" class="w-12 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -41,16 +41,16 @@
                     </svg>
                 </div>
                 <h1 class="text-2xl font-black primary-color tracking-wide">Sknk - سكنك</h1>
-                <p id="authSubtitle" class="text-xs text-stone-500 font-semibold">بوابة الدخول الرسمية لسكن طلاب جامعة المنيا</p>
+                <p id="authSubtitle" class="text-xs text-stone-500 font-semibold">بوابة دخول وتسجيل الطلاب المستقلة</p>
             </div>
 
             <!-- Role Selector -->
             <div class="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-2xl border border-stone-200">
                 <button type="button" onclick="setAuthRole('student')" id="authRoleStudentBtn" class="py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm">
-                    👨‍🎓 طالب / طالبة
+                    👨‍🎓 بوابة الطلاب
                 </button>
                 <button type="button" onclick="setAuthRole('owner')" id="authRoleOwnerBtn" class="py-2.5 rounded-xl text-xs font-bold transition text-stone-700">
-                    🏠 مالك عقار
+                    🏠 بوابة الملاك
                 </button>
             </div>
 
@@ -148,13 +148,16 @@
 
             <!-- Filter by Gender -->
             <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-bold text-stone-600">تصفية السكن:</span>
                     <button onclick="filterListings('all')" id="filterAll" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-primary text-white">الكل</button>
                     <button onclick="filterListings('شباب')" id="filterBoys" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-stone-100 text-stone-700 hover:bg-blue-50">👨‍🎓 سكن شباب</button>
                     <button onclick="filterListings('بنات')" id="filterGirls" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-stone-100 text-stone-700 hover:bg-pink-50">👩‍🎓 سكن بنات</button>
                 </div>
-                <span id="listingsCount" class="text-xs font-bold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full">0 وحدة متوفرة</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="renderStudentListings(); showToast('تم تحديث القائمة', '🔄');" class="text-xs font-bold text-primary bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 hover:bg-amber-100">🔄 تحديث</button>
+                    <span id="listingsCount" class="text-xs font-bold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-full">0 وحدة متوفرة</span>
+                </div>
             </div>
 
             <!-- Direct Listings Grid -->
@@ -167,7 +170,7 @@
                 <div>
                     <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك الرسمية</span>
                     <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل ثقة وأمان</h2>
-                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك لتتم مراجعتها ونشرها فوراً.</p>
+                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو لتصل فوراً إلى الإدارة.</p>
                 </div>
                 <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm shrink-0">
                     ➕ إضافة شقة جديدة للإدارة
@@ -190,8 +193,7 @@
                 <div class="flex gap-3 items-center flex-wrap">
                     <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalListings" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">وحدات</span></div>
                     <div class="bg-white/10 px-4 py-2 rounded-2xl text-center"><span id="adminTotalRequests" class="block text-xl font-black">0</span><span class="text-xs text-amber-200">حجوزات</span></div>
-                    <button onclick="switchView('student')" class="bg-white text-primary font-bold px-3 py-2 rounded-xl text-xs">👨‍🎓 معاينة كطالب</button>
-                    <button onclick="switchView('owner')" class="bg-white text-secondary font-bold px-3 py-2 rounded-xl text-xs">🏠 معاينة كمالك</button>
+                    <button onclick="renderAdminData(); showToast('تم تحديث بيانات الإدارة', '🔄');" class="bg-amber-400 text-stone-900 font-bold px-3 py-2 rounded-xl text-xs">🔄 تحديث البيانات</button>
                 </div>
             </div>
 
@@ -270,19 +272,28 @@
                     <div><label class="block font-bold mb-1">المسافة عن الجامعة</label><input type="text" id="propDistance" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="5 دقائق سيراً"></div>
                 </div>
                 
-                <div class="bg-stone-50 p-3 rounded-2xl border border-stone-200">
-                    <label class="block font-bold mb-1 text-primary">🖼️ صورة الوحدة (اختياري - ستُوضع خلفية شقة فخمة تلقائياً)</label>
-                    <input type="file" id="propMediaFiles" accept="image/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white cursor-pointer">
+                <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200 flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=200&q=80" class="w-14 h-14 rounded-xl object-cover shrink-0 border border-amber-300" alt="خلفية الشقة">
+                    <div class="text-xs text-amber-900">
+                        <p class="font-bold">🖼️ الخلفية المعتمدة للوحدة:</p>
+                        <p class="text-[11px] text-amber-800">تم تثبيت خلفية شقة مودرن فخمة تلقائياً لتظهر بشكل جذاب أمام الطلاب.</p>
+                    </div>
+                </div>
+
+                <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200">
+                    <label class="block font-bold mb-1 text-sky-900">🎥 رفع جولة فيديو تفصيلية للوحدة (ملف فيديو)</label>
+                    <input type="file" id="propVideoFile" accept="video/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-700 file:text-white cursor-pointer">
+                    <p class="text-[10px] text-sky-800 mt-1">يساعد الفيديو في زيادة مصداقية العقار وسرعة اعتماده من الإدارة.</p>
                 </div>
 
                 <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
-                    <label class="block font-bold mb-1 text-secondary">🛡️ مستند إثبات الملكية (سري للإدارة)</label>
-                    <input type="file" id="propVerifyDoc" accept="image/*,.pdf" required class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white cursor-pointer">
+                    <label class="block font-bold mb-1 text-secondary">🛡️ مستند إثبات الملكية (اختياري - سري للإدارة)</label>
+                    <input type="file" id="propVerifyDoc" accept="image/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white cursor-pointer">
                 </div>
 
-                <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 space-y-1">
-                    <label class="block font-bold text-amber-900 text-xs">💳 إيصال دفع رسوم جدية الإعلان (100 ج.م)</label>
-                    <input type="file" id="propFeeReceipt" accept="image/*" required class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-700 file:text-white cursor-pointer">
+                <div class="bg-stone-50 p-3 rounded-2xl border border-stone-200 space-y-1">
+                    <label class="block font-bold text-stone-700 text-xs">💳 إيصال دفع رسوم جدية الإعلان (اختياري)</label>
+                    <input type="file" id="propFeeReceipt" accept="image/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-stone-700 file:text-white cursor-pointer">
                 </div>
 
                 <div><label class="block font-bold mb-1">مواصفات السكن</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي، غسالة أوتوماتيك..."></textarea></div>
@@ -370,64 +381,126 @@
 
     <!-- Script Logic -->
     <script>
-        // صور خلفيات احترافية وفخمة للشقق من الإنترنت
-        const niceApartmentBackgrounds = [
-            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=85",
-            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=85",
-            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=85",
-            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=85"
-        ];
+        const DEFAULT_APARTMENT_BG = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=85";
+        const STORAGE_KEYS = {
+            LISTINGS: 'sknk_master_listings',
+            BOOKINGS: 'sknk_master_bookings',
+            NOTIFS: 'sknk_master_notifs',
+            USER: 'sknk_master_user',
+            WALLET: 'sknk_master_wallet',
+            ACCOUNTS: 'sknk_master_accounts_v2'
+        };
 
-        // دالة لقراءة أحدث البيانات دائماً من localStorage لمنع أي ضياع للبيانات بين الحسابات
+        let memoryStore = {
+            listings: [],
+            bookings: [],
+            notifs: [],
+            user: null,
+            wallet: 500,
+            accounts: []
+        };
+
+        function loadStore(key, fallback) {
+            try {
+                const fromLocal = localStorage.getItem(key);
+                if (fromLocal !== null) return JSON.parse(fromLocal);
+            } catch (e) {}
+            try {
+                if (window.name && window.name.startsWith('SKNK_STATE:')) {
+                    const parsedName = JSON.parse(window.name.replace('SKNK_STATE:', ''));
+                    if (parsedName[key] !== undefined) return parsedName[key];
+                }
+            } catch (e) {}
+            return fallback;
+        }
+
+        function saveStore(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {}
+            try {
+                let currentState = {};
+                if (window.name && window.name.startsWith('SKNK_STATE:')) {
+                    currentState = JSON.parse(window.name.replace('SKNK_STATE:', ''));
+                }
+                currentState[key] = value;
+                window.name = 'SKNK_STATE:' + JSON.stringify(currentState);
+            } catch (e) {}
+        }
+
         function getListings() {
-            let data = JSON.parse(localStorage.getItem('sknk_listings'));
-            if (!data || data.length === 0) {
-                // إضافة وحدة افتراضية جاهزة لجمال الشكل والتجربة الفورية
-                data = [{
-                    id: 1001,
-                    title: "شقة مودرن مكيفة بجوار بوابة الجامعة",
-                    area: "حي شلبي",
-                    target: "شباب",
-                    type: "شقة كاملة",
-                    distance: "3 دقائق سيراً من البوابة الرئيسية",
-                    detailedAddress: "شارع عدنان المالكي، برج النور، الدور الثالث",
-                    price: "4500",
-                    ownerPhone: "01000000000",
-                    image: niceApartmentBackgrounds[0],
-                    verifyDoc: niceApartmentBackgrounds[1],
-                    feeReceipt: niceApartmentBackgrounds[2],
-                    desc: "شقة مفروشة بالكامل فرش حديث، 3 غرف مكيفة، إنترنت فايبر فائق السرعة، قريبة من جميع الخدمات.",
-                    status: "approved"
-                }];
-                localStorage.setItem('sknk_listings', JSON.stringify(data));
-            }
-            return data;
+            const list = loadStore(STORAGE_KEYS.LISTINGS, memoryStore.listings);
+            memoryStore.listings = Array.isArray(list) ? list : [];
+            return memoryStore.listings;
+        }
+
+        function saveListings(data) {
+            memoryStore.listings = data;
+            saveStore(STORAGE_KEYS.LISTINGS, data);
         }
 
         function getBookings() {
-            return JSON.parse(localStorage.getItem('sknk_bookings')) || [];
+            const list = loadStore(STORAGE_KEYS.BOOKINGS, memoryStore.bookings);
+            memoryStore.bookings = Array.isArray(list) ? list : [];
+            return memoryStore.bookings;
+        }
+
+        function saveBookings(data) {
+            memoryStore.bookings = data;
+            saveStore(STORAGE_KEYS.BOOKINGS, data);
         }
 
         function getNotifications() {
-            return JSON.parse(localStorage.getItem('sknk_admin_notifications')) || [];
+            const list = loadStore(STORAGE_KEYS.NOTIFS, memoryStore.notifs);
+            memoryStore.notifs = Array.isArray(list) ? list : [];
+            return memoryStore.notifs;
         }
 
-        let currentUser = JSON.parse(localStorage.getItem('sknk_current_user')) || null;
+        function saveNotifications(data) {
+            memoryStore.notifs = data;
+            saveStore(STORAGE_KEYS.NOTIFS, data);
+        }
+
+        function getRegisteredAccounts() {
+            const list = loadStore(STORAGE_KEYS.ACCOUNTS, memoryStore.accounts);
+            memoryStore.accounts = Array.isArray(list) ? list : [];
+            return memoryStore.accounts;
+        }
+
+        function saveRegisteredAccounts(data) {
+            memoryStore.accounts = data;
+            saveStore(STORAGE_KEYS.ACCOUNTS, data);
+        }
+
+        function compressDocToBase64(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 350;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.5));
+                    };
+                    img.onerror = () => resolve(DEFAULT_APARTMENT_BG);
+                };
+                reader.onerror = () => resolve(DEFAULT_APARTMENT_BG);
+            });
+        }
+
+        let currentUser = loadStore(STORAGE_KEYS.USER, null);
         let authRole = 'student';
         let isAuthLogin = true;
         let selectedPayMethod = 'visa';
         let currentGenderFilter = 'all';
-        let studentWallet = parseFloat(localStorage.getItem('sknk_wallet')) || 500;
-
-        // تحويل الملف المرفوع لنص Base64 دائم حتى لا يختفي أبداً عند تسجيل الخروج
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
+        let studentWallet = parseFloat(loadStore(STORAGE_KEYS.WALLET, 500)) || 500;
 
         window.addEventListener('DOMContentLoaded', () => {
             if(!currentUser) {
@@ -442,7 +515,7 @@
         function updateHeaderUser() {
             const greeting = document.getElementById('userGreeting');
             if(currentUser) {
-                greeting.innerText = `مرحباً، ${currentUser.name}`;
+                greeting.innerText = `مرحباً، ${currentUser.name} (${currentUser.role === 'owner' ? 'مالك' : 'طالب'})`;
                 greeting.classList.remove('hidden');
             } else {
                 greeting.classList.add('hidden');
@@ -458,7 +531,7 @@
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
                 toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 3000);
+            }, 3500);
         }
 
         function pushAdminNotification(title, type = 'info') {
@@ -469,11 +542,11 @@
                 time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
                 type: type
             });
-            localStorage.setItem('sknk_admin_notifications', JSON.stringify(notifs));
+            saveNotifications(notifs);
         }
 
         function clearNotifications() {
-            localStorage.setItem('sknk_admin_notifications', JSON.stringify([]));
+            saveNotifications([]);
             renderAdminData();
             showToast("تم مسح الإشعارات.", "🧹");
         }
@@ -483,9 +556,11 @@
             if(role === 'student') {
                 document.getElementById('authRoleStudentBtn').className = "py-2.5 rounded-xl text-xs font-bold transition bg-primary text-white shadow-sm";
                 document.getElementById('authRoleOwnerBtn').className = "py-2.5 rounded-xl text-xs font-bold transition text-stone-700";
+                document.getElementById('authSubtitle').innerText = "بوابة دخول وتسجيل الطلاب المستقلة";
             } else {
                 document.getElementById('authRoleOwnerBtn').className = "py-2.5 rounded-xl text-xs font-bold transition bg-secondary text-white shadow-sm";
                 document.getElementById('authRoleStudentBtn').className = "py-2.5 rounded-xl text-xs font-bold transition text-stone-700";
+                document.getElementById('authSubtitle').innerText = "بوابة دخول وتسجيل ملاك العقارات المستقلة";
             }
         }
 
@@ -498,14 +573,14 @@
             const nameContainer = document.getElementById('authNameContainer');
 
             if(isAuthLogin) {
-                subtitle.innerText = "تسجيل الدخول لبوابة سكن طلاب جامعة المنيا";
+                subtitle.innerText = authRole === 'student' ? "بوابة دخول الطلاب" : "بوابة دخول ملاك العقارات";
                 submitBtn.innerText = "تسجيل الدخول";
                 toggleText.innerText = "ليس لديك حساب؟";
                 toggleBtn.innerText = "إنشاء حساب جديد";
                 nameContainer.classList.add('hidden');
             } else {
-                subtitle.innerText = "إنشاء حساب جديد في المنصة";
-                submitBtn.innerText = "إنشاء الحساب";
+                subtitle.innerText = authRole === 'student' ? "إنشاء حساب طالب جديد" : "إنشاء حساب مالك جديد";
+                submitBtn.innerText = "إنشاء الحساب والتسجيل";
                 toggleText.innerText = "لديك حساب بالفعل؟";
                 toggleBtn.innerText = "تسجيل الدخول";
                 nameContainer.classList.remove('hidden');
@@ -514,33 +589,66 @@
 
         function handleAuthSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('authEmail').value.trim();
+            const email = document.getElementById('authEmail').value.trim().toLowerCase();
             const pass = document.getElementById('authPass').value.trim();
             const nameInput = document.getElementById('authName').value.trim();
-            const name = nameInput || (authRole === 'student' ? 'طالب جامعة المنيا' : 'مالك عقار');
+            const accounts = getRegisteredAccounts();
 
+            // التحقق السري لدخول الإدارة عبر حقول البريد وكلمة المرور الخاصة بها فقط
             if (email === "admin@sknk.com" && pass === "admin2026") {
-                currentUser = { email, name: "مدير النظام", role: 'admin' };
-                localStorage.setItem('sknk_current_user', JSON.stringify(currentUser));
+                currentUser = { email: "admin@sknk.com", name: "مدير النظام", role: 'admin' };
+                saveStore(STORAGE_KEYS.USER, currentUser);
                 document.getElementById('authOverlay').classList.add('hidden');
                 updateHeaderUser();
                 switchView('admin');
-                showToast("أهلاً بك يا مدير النظام! تم فتح لوحة الإدارة.", "⚙️");
+                showToast("تم الدخول إلى لوحة الإدارة بنجاح!", "⚙️");
                 return;
             }
 
-            currentUser = { email, name, role: authRole };
-            localStorage.setItem('sknk_current_user', JSON.stringify(currentUser));
+            if (isAuthLogin) {
+                const found = accounts.find(acc => acc.email === email && acc.pass === pass && acc.role === authRole);
+                if (!found) {
+                    alert(authRole === 'student' ? "بيانات الدخول غير صحيحة أو هذا الحساب مسجل كمالك عقار. تأكد من اختيار بوابة الطالب الصحيحة." : "بيانات الدخول غير صحيحة أو هذا الحساب مسجل كطالب. تأكد من اختيار بوابة المالك الصحيحة.");
+                    return;
+                }
+                currentUser = found;
+            } else {
+                if (!nameInput) {
+                    alert("يرجى إدخال الاسم الكامل.");
+                    return;
+                }
+                const emailExists = accounts.some(acc => acc.email === email);
+                if (emailExists) {
+                    alert("هذا البريد الإلكتروني مسجل مسبقاً، يرجى استخدام بريد آخر.");
+                    return;
+                }
+                const passExists = accounts.some(acc => acc.pass === pass);
+                if (passExists) {
+                    alert("كلمة المرور هذه مستخدمة مسبقاً في حساب آخر، يرجى اختيار كلمة مرور فريدة وغير متكررة لضمان الأمان والخصوصية.");
+                    return;
+                }
+
+                const newAcc = { email, pass, name: nameInput, role: authRole };
+                accounts.push(newAcc);
+                saveRegisteredAccounts(accounts);
+                currentUser = newAcc;
+                showToast("تم إنشاء الحساب بنجاح!", "🎉");
+            }
+
+            saveStore(STORAGE_KEYS.USER, currentUser);
             document.getElementById('authOverlay').classList.add('hidden');
             updateHeaderUser();
-            switchView(authRole);
-            showToast(`أهلاً بك يا ${name}! تم تسجيل الدخول بنجاح.`, "👋");
+            switchView(currentUser.role);
+            showToast(`أهلاً بك يا ${currentUser.name}!`, "👋");
         }
 
         function logout() {
-            localStorage.removeItem('sknk_current_user');
+            saveStore(STORAGE_KEYS.USER, null);
             currentUser = null;
             updateHeaderUser();
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPass').value = '';
+            document.getElementById('authName').value = '';
             document.getElementById('authOverlay').classList.remove('hidden');
         }
 
@@ -603,14 +711,14 @@
             document.getElementById('listingsCount').innerText = `${data.length} وحدة متوفرة`;
 
             if(data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معتمدة في هذا القسم حالياً</h4><p class="text-stone-500 text-sm mt-1">تأكد من اعتماد الوحدات من لوحة الإدارة أو جرب تصفية أخرى.</p></div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">بانتظار إضافة الوحدات من الملاك واعتمادها من الإدارة.</p></div>`;
                 return;
             }
 
             container.innerHTML = data.map(item => `
                 <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-stone-200 flex flex-col hover:shadow-md transition">
                     <div class="relative h-52">
-                        <img src="${item.image}" class="w-full h-full object-cover" alt="خلفية الشقة">
+                        <img src="${item.image || DEFAULT_APARTMENT_BG}" class="w-full h-full object-cover" alt="خلفية الشقة">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                         <span class="absolute top-3 right-3 bg-white/95 px-3 py-1 rounded-full text-xs font-bold primary-color shadow">${item.area}</span>
                         <span class="absolute top-3 left-3 ${item.target === 'بنات' ? 'bg-pink-600' : 'bg-blue-600'} text-white px-3 py-1 rounded-full text-xs font-bold shadow">
@@ -625,6 +733,7 @@
                             <h4 class="font-bold text-stone-800 text-base">${item.title}</h4>
                             <p class="text-xs text-stone-500 mt-1">نوع الوحدة: <b>${item.type}</b></p>
                             <p class="text-xs text-emerald-700 font-bold mt-1">📍 المسافة عن الجامعة: ${item.distance || '5 دقائق سيراً'}</p>
+                            ${item.videoUrl ? `<p class="text-xs text-sky-700 font-bold mt-1">🎥 يتوفر فيديو تفصيلي للوحدة</p>` : ''}
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t">
                             <span class="text-lg font-black primary-color">${item.price} ج.م <span class="text-xs font-normal text-stone-500">/ شهر</span></span>
@@ -647,28 +756,27 @@
         async function submitNewListing(e) {
             e.preventDefault();
             const btn = document.getElementById('submitListingBtn');
-            btn.innerText = "جاري حفظ البيانات والصور...";
+            btn.innerText = "جاري الإرسال...";
             btn.disabled = true;
 
             try {
-                const fileInput = document.getElementById('propMediaFiles');
                 const verifyInput = document.getElementById('propVerifyDoc');
                 const feeInput = document.getElementById('propFeeReceipt');
-                
-                // خلفية فخمة افتراضية من الإنترنت في حال لم يرفع المالك صورة
-                let imagePath = niceApartmentBackgrounds[Math.floor(Math.random() * niceApartmentBackgrounds.length)];
-                if (fileInput.files && fileInput.files[0]) {
-                    imagePath = await fileToBase64(fileInput.files[0]);
+                const videoInput = document.getElementById('propVideoFile');
+
+                let verifyDocPath = DEFAULT_APARTMENT_BG;
+                if (verifyInput && verifyInput.files && verifyInput.files[0]) {
+                    verifyDocPath = await compressDocToBase64(verifyInput.files[0]);
                 }
 
-                let verifyDocPath = niceApartmentBackgrounds[1];
-                if (verifyInput.files && verifyInput.files[0]) {
-                    verifyDocPath = await fileToBase64(verifyInput.files[0]);
+                let feeReceiptPath = DEFAULT_APARTMENT_BG;
+                if (feeInput && feeInput.files && feeInput.files[0]) {
+                    feeReceiptPath = await compressDocToBase64(feeInput.files[0]);
                 }
 
-                let feeReceiptPath = niceApartmentBackgrounds[2];
-                if (feeInput.files && feeInput.files[0]) {
-                    feeReceiptPath = await fileToBase64(feeInput.files[0]);
+                let videoUrl = "";
+                if (videoInput && videoInput.files && videoInput.files[0]) {
+                    videoUrl = URL.createObjectURL(videoInput.files[0]);
                 }
 
                 const title = document.getElementById('propTitle').value;
@@ -676,6 +784,7 @@
 
                 const newProp = {
                     id: Date.now(),
+                    ownerEmail: currentUser ? currentUser.email : 'owner',
                     title: title,
                     area: document.getElementById('propArea').value,
                     target: target,
@@ -684,25 +793,27 @@
                     detailedAddress: document.getElementById('propDetailedAddress').value,
                     price: document.getElementById('propPrice').value,
                     ownerPhone: document.getElementById('propOwnerPhone').value,
-                    image: imagePath,
+                    image: DEFAULT_APARTMENT_BG,
+                    videoUrl: videoUrl,
                     verifyDoc: verifyDocPath,
                     feeReceipt: feeReceiptPath,
                     desc: document.getElementById('propDesc').value,
-                    status: 'pending' // تنتظر اعتماد الإدارة
+                    status: 'pending'
                 };
 
                 const currentListings = getListings();
-                currentListings.push(newProp);
-                localStorage.setItem('sknk_listings', JSON.stringify(currentListings));
+                currentListings.unshift(newProp);
+                saveListings(currentListings);
 
-                pushAdminNotification(`🏠 تم إضافة شقة جديدة (${target}) بواسطة مالك: "${title}"`, 'owner');
+                pushAdminNotification(`🏠 شقة جديدة (${target}) مضافة بواسطة مالك (${currentUser ? currentUser.name : 'عقار'}): "${title}"`, 'owner');
 
                 closeAddListingModal();
                 document.getElementById('addListingModal').querySelector('form').reset();
-                showToast('تم إرسال الشقة للإدارة بنجاح! ستظهر للطلاب فور اعتماد الإدارة.', '✅');
+                showToast('تم إرسال الشقة للإدارة بنجاح!', '✅');
                 renderOwnerListings();
             } catch (err) {
-                alert("حدث خطأ أثناء رفع الملفات، تأكد أن حجم الصور صغير (أقل من 2 ميجا).");
+                console.error(err);
+                alert("حدث خطأ أثناء الحفظ، يرجى المحاولة مرة أخرى.");
             } finally {
                 btn.innerText = "إرسال الوحدة للإدارة";
                 btn.disabled = false;
@@ -712,17 +823,21 @@
         function renderOwnerListings() {
             const container = document.getElementById('ownerListingsContainer');
             const currentListings = getListings();
-            if(currentListings.length === 0) {
+            const myEmail = currentUser ? currentUser.email : '';
+            const myListings = currentListings.filter(item => item.ownerEmail === myEmail);
+
+            if(myListings.length === 0) {
                 container.innerHTML = `<p class="text-stone-500 text-sm text-center py-6">لم تقم بإضافة أي وحدات بعد.</p>`;
                 return;
             }
-            container.innerHTML = currentListings.map(item => `
+            container.innerHTML = myListings.map(item => `
                 <div class="bg-stone-50 border rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div class="flex items-center gap-4">
-                        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover shadow-sm" alt="شقة">
+                        <img src="${item.image || DEFAULT_APARTMENT_BG}" class="w-16 h-16 rounded-xl object-cover shadow-sm" alt="شقة">
                         <div>
                             <h4 class="font-bold text-stone-800">${item.title} <span class="text-xs px-2 py-0.5 rounded ${item.target === 'بنات' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">${item.target}</span></h4>
                             <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> - ${item.price} ج.م</p>
+                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 مرفق فيديو تفصيلي</p>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center gap-3 self-end sm:self-center">
@@ -738,7 +853,7 @@
         function deleteListing(id) {
             let currentListings = getListings();
             currentListings = currentListings.filter(l => l.id !== id);
-            localStorage.setItem('sknk_listings', JSON.stringify(currentListings));
+            saveListings(currentListings);
             renderOwnerListings();
             showToast('تم حذف الوحدة بنجاح.', '🗑️');
         }
@@ -749,9 +864,9 @@
             const content = document.getElementById('verifyDocContent');
             content.innerHTML = `
                 <p class="text-xs font-bold text-primary">1. مستند إثبات الملكية:</p>
-                <img src="${prop.verifyDoc || prop.image}" class="max-h-40 rounded-xl object-contain shadow mb-2" alt="مستند الملكية">
+                <img src="${prop.verifyDoc || DEFAULT_APARTMENT_BG}" class="max-h-40 rounded-xl object-contain shadow mb-2" alt="مستند الملكية">
                 <p class="text-xs font-bold text-amber-800">2. إيصال رسوم جدية الإعلان (الضمان):</p>
-                <img src="${prop.feeReceipt || prop.image}" class="max-h-40 rounded-xl object-contain shadow" alt="إيصال الرسوم">
+                <img src="${prop.feeReceipt || DEFAULT_APARTMENT_BG}" class="max-h-40 rounded-xl object-contain shadow" alt="إيصال الرسوم">
             `;
             document.getElementById('verifyDocModal').classList.remove('hidden');
         }
@@ -767,7 +882,16 @@
             document.getElementById('modalPropTitle').innerText = prop.title;
             document.getElementById('modalPropContent').innerHTML = `
                 <div class="space-y-4">
-                    <img src="${prop.image}" class="w-full h-56 rounded-2xl object-cover shadow-sm" alt="شقة">
+                    <img src="${prop.image || DEFAULT_APARTMENT_BG}" class="w-full h-56 rounded-2xl object-cover shadow-sm" alt="شقة">
+                    ${prop.videoUrl ? `
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-sky-900">🎥 جولة فيديو تفصيلية للشقة:</label>
+                            <video controls class="w-full h-48 rounded-2xl bg-black object-contain shadow">
+                                <source src="${prop.videoUrl}" type="video/mp4">
+                                المتصفح لا يدعم عرض الفيديو.
+                            </video>
+                        </div>
+                    ` : ''}
                     <div class="grid grid-cols-2 gap-3 bg-stone-50 p-4 rounded-2xl text-center text-xs font-bold">
                         <div><span class="block text-stone-400">المنطقة</span>${prop.area}</div>
                         <div><span class="block text-stone-400">مخصص لـ</span><span class="${prop.target === 'بنات' ? 'text-pink-600' : 'text-blue-600'}">${prop.target} فقط</span></div>
@@ -810,7 +934,7 @@
             };
             const currentBookings = getBookings();
             currentBookings.push(booking);
-            localStorage.setItem('sknk_bookings', JSON.stringify(currentBookings));
+            saveBookings(currentBookings);
 
             pushAdminNotification(`👨‍🎓 طلب حجز جديد من (${name}) على وحدة (${prop.target}): "${prop.title}"`, 'student');
 
@@ -859,7 +983,7 @@
             if(isNaN(amt) || amt <= 0) { alert('يرجى إدخال مبلغ صحيح.'); return; }
             
             studentWallet += amt;
-            localStorage.setItem('sknk_wallet', studentWallet);
+            saveStore(STORAGE_KEYS.WALLET, studentWallet);
             document.getElementById('walletBalanceDisplay').innerText = `${studentWallet} ج.م`;
             document.getElementById('depositAmount').value = '';
             
@@ -912,16 +1036,17 @@
                 `).join('');
             }
 
-            document.getElementById('adminListingsContainer').innerHTML = currentListings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات.</p>` : currentListings.map(item => `
+            document.getElementById('adminListingsContainer').innerHTML = currentListings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات مضافة من الملاك حالياً.</p>` : currentListings.map(item => `
                 <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm shadow-sm">
                     <div class="flex gap-3 items-center">
-                        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover shrink-0" alt="صورة">
+                        <img src="${item.image || DEFAULT_APARTMENT_BG}" class="w-16 h-16 rounded-xl object-cover shrink-0" alt="صورة">
                         <div class="flex-grow">
                             <div class="flex justify-between items-start gap-2">
                                 <h4 class="font-bold text-stone-800">${item.title}</h4>
                                 <span class="text-[11px] px-2 py-0.5 rounded font-bold shrink-0 ${item.target === 'بنات' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">سكن ${item.target}</span>
                             </div>
                             <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> | ${item.price} ج.م</p>
+                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 يتوفر فيديو تفصيلي مرفق</p>` : ''}
                         </div>
                     </div>
                     <p class="text-xs text-primary font-bold bg-stone-50 p-2 rounded-lg">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
@@ -938,7 +1063,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('adminBookingsContainer').innerHTML = currentBookings.length === 0 ? `<p class="text-stone-500 text-sm text-center py-6">لا توجد طلبات.</p>` : currentBookings.map(b => `
+            document.getElementById('adminBookingsContainer').innerHTML = currentBookings.length === 0 ? `<p class="text-stone-500 text-sm text-center py-6">لا توجد طلبات حجز حالياً.</p>` : currentBookings.map(b => `
                 <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm">
                     <div class="flex justify-between items-center"><span class="font-bold text-primary">طلب #${b.id}</span><span class="text-xs font-bold">${b.status === 'confirmed' ? '✅ مؤكد' : '⏳ معلق'}</span></div>
                     <p class="text-xs"><b>الطالب:</b> ${b.studentName} (${b.studentPhone}) - ${b.studentCollege}</p>
@@ -955,7 +1080,7 @@
             const item = currentListings.find(l => l.id === id);
             if(item) { 
                 item.status = 'approved'; 
-                localStorage.setItem('sknk_listings', JSON.stringify(currentListings)); 
+                saveListings(currentListings); 
                 renderAdminData(); 
                 showToast('تم اعتماد الشقة ونشرها للطلاب بنجاح!', '🚀');
             }
@@ -964,11 +1089,11 @@
         function adminConfirmBooking(bookingId, propId) {
             const currentBookings = getBookings();
             const b = currentBookings.find(x => x.id === bookingId);
-            if(b) { b.status = 'confirmed'; localStorage.setItem('sknk_bookings', JSON.stringify(currentBookings)); }
+            if(b) { b.status = 'confirmed'; saveBookings(currentBookings); }
             
             const currentListings = getListings();
             const p = currentListings.find(x => x.id === propId);
-            if(p) { p.status = 'booked'; localStorage.setItem('sknk_listings', JSON.stringify(currentListings)); }
+            if(p) { p.status = 'booked'; saveListings(currentListings); }
             
             renderAdminData();
             showToast('تم تأكيد الحجز بنجاح.', '✨');
