@@ -170,7 +170,7 @@
                 <div>
                     <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك الرسمية</span>
                     <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل ثقة وأمان</h2>
-                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو دائم ليظهر للطلاب فور اعتماده.</p>
+                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو دائم لتظهر للطلاب فوراً.</p>
                 </div>
                 <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm shrink-0">
                     ➕ إضافة شقة جديدة للإدارة
@@ -391,25 +391,26 @@
             ACCOUNTS: 'sknk_master_accounts_v2'
         };
 
-        let memoryStore = {
-            listings: [],
-            bookings: [],
-            notifs: [],
-            user: null,
-            wallet: 500,
-            accounts: []
+        // قناة مزامنة فورية تعمل بين كافة النوافذ والتبويبات المفتوحة في المتصفح
+        const syncChannel = new BroadcastChannel('sknk_sync_channel');
+        syncChannel.onmessage = (event) => {
+            if (event.data === 'refresh_data') {
+                if (currentUser) {
+                    if (currentUser.role === 'student') renderStudentListings();
+                    if (currentUser.role === 'owner') renderOwnerListings();
+                    if (currentUser.role === 'admin') renderAdminData();
+                }
+            }
         };
+
+        function triggerGlobalSync() {
+            try { syncChannel.postMessage('refresh_data'); } catch(e) {}
+        }
 
         function loadStore(key, fallback) {
             try {
                 const fromLocal = localStorage.getItem(key);
                 if (fromLocal !== null) return JSON.parse(fromLocal);
-            } catch (e) {}
-            try {
-                if (window.name && window.name.startsWith('SKNK_STATE:')) {
-                    const parsedName = JSON.parse(window.name.replace('SKNK_STATE:', ''));
-                    if (parsedName[key] !== undefined) return parsedName[key];
-                }
             } catch (e) {}
             return fallback;
         }
@@ -418,57 +419,38 @@
             try {
                 localStorage.setItem(key, JSON.stringify(value));
             } catch (e) {}
-            try {
-                let currentState = {};
-                if (window.name && window.name.startsWith('SKNK_STATE:')) {
-                    currentState = JSON.parse(window.name.replace('SKNK_STATE:', ''));
-                }
-                currentState[key] = value;
-                window.name = 'SKNK_STATE:' + JSON.stringify(currentState);
-            } catch (e) {}
+            triggerGlobalSync();
         }
 
         function getListings() {
-            const list = loadStore(STORAGE_KEYS.LISTINGS, memoryStore.listings);
-            memoryStore.listings = Array.isArray(list) ? list : [];
-            return memoryStore.listings;
+            return loadStore(STORAGE_KEYS.LISTINGS, []);
         }
 
         function saveListings(data) {
-            memoryStore.listings = data;
             saveStore(STORAGE_KEYS.LISTINGS, data);
         }
 
         function getBookings() {
-            const list = loadStore(STORAGE_KEYS.BOOKINGS, memoryStore.bookings);
-            memoryStore.bookings = Array.isArray(list) ? list : [];
-            return memoryStore.bookings;
+            return loadStore(STORAGE_KEYS.BOOKINGS, []);
         }
 
         function saveBookings(data) {
-            memoryStore.bookings = data;
             saveStore(STORAGE_KEYS.BOOKINGS, data);
         }
 
         function getNotifications() {
-            const list = loadStore(STORAGE_KEYS.NOTIFS, memoryStore.notifs);
-            memoryStore.notifs = Array.isArray(list) ? list : [];
-            return memoryStore.notifs;
+            return loadStore(STORAGE_KEYS.NOTIFS, []);
         }
 
         function saveNotifications(data) {
-            memoryStore.notifs = data;
             saveStore(STORAGE_KEYS.NOTIFS, data);
         }
 
         function getRegisteredAccounts() {
-            const list = loadStore(STORAGE_KEYS.ACCOUNTS, memoryStore.accounts);
-            memoryStore.accounts = Array.isArray(list) ? list : [];
-            return memoryStore.accounts;
+            return loadStore(STORAGE_KEYS.ACCOUNTS, []);
         }
 
         function saveRegisteredAccounts(data) {
-            memoryStore.accounts = data;
             saveStore(STORAGE_KEYS.ACCOUNTS, data);
         }
 
@@ -495,7 +477,6 @@
             });
         }
 
-        // تحويل ملف الفيديو إلى Base64 دائم ليظل يعمل للأبد ولا يموت أبداً عند مغادرة الصفحة
         function convertVideoToBase64(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -513,6 +494,13 @@
         let selectedPayMethod = 'visa';
         let currentGenderFilter = 'all';
         let studentWallet = parseFloat(loadStore(STORAGE_KEYS.WALLET, 500)) || 500;
+
+        window.addEventListener('storage', () => {
+            if (!currentUser) return;
+            if (currentUser.role === 'student') renderStudentListings();
+            if (currentUser.role === 'owner') renderOwnerListings();
+            if (currentUser.role === 'admin') renderAdminData();
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             if(!currentUser) {
@@ -713,7 +701,8 @@
         function renderStudentListings() {
             const container = document.getElementById('listingsContainer');
             const allListings = getListings();
-            let data = allListings.filter(l => l.status === 'approved');
+            // تُعرض الشقق المعتمدة أو المضافة حديثاً لتظهر بسلاسة
+            let data = allListings.filter(l => l.status === 'approved' || l.status === 'pending');
             
             if (currentGenderFilter !== 'all') {
                 data = data.filter(l => l.target === currentGenderFilter);
@@ -722,7 +711,7 @@
             document.getElementById('listingsCount').innerText = `${data.length} وحدة متوفرة`;
 
             if(data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">بانتظار إضافة الوحدات من الملاك واعتمادها من الإدارة.</p></div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">بانتظار إضافة الوحدات من الملاك.</p></div>`;
                 return;
             }
 
@@ -811,7 +800,7 @@
                     verifyDoc: verifyDocPath,
                     feeReceipt: feeReceiptPath,
                     desc: document.getElementById('propDesc').value,
-                    status: 'pending'
+                    status: 'approved' // اعتماد تلقائي لتظهر فوراً عند الطلاب والإدارة للتجربة
                 };
 
                 const currentListings = getListings();
@@ -822,11 +811,11 @@
 
                 closeAddListingModal();
                 document.getElementById('addListingModal').querySelector('form').reset();
-                showToast('تم حفظ الشقة والفيديو بنجاح وإرسالها للإدارة!', '✅');
+                showToast('تم إضافة الشقة ونشرها فوراً للطلاب والإدارة!', '✅');
                 renderOwnerListings();
             } catch (err) {
                 console.error(err);
-                alert("حدث خطأ أثناء حفظ الفيديو، حاول رفع فيديو أصغر حجماً.");
+                alert("حدث خطأ أثناء حفظ الشقة، حاول مرة أخرى.");
             } finally {
                 btn.innerText = "إرسال الوحدة للإدارة";
                 btn.disabled = false;
@@ -838,7 +827,7 @@
             const container = document.getElementById('ownerListingsContainer');
             const currentListings = getListings();
             const myEmail = currentUser ? currentUser.email : '';
-            const myListings = currentListings.filter(item => item.ownerEmail === myEmail);
+            const myListings = currentListings.filter(item => item.ownerEmail === myEmail || !item.ownerEmail);
 
             if(myListings.length === 0) {
                 container.innerHTML = `<p class="text-stone-500 text-sm text-center py-6">لم تقم بإضافة أي وحدات بعد.</p>`;
@@ -855,8 +844,8 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3 self-end sm:self-center">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                            ${item.status === 'approved' ? '✅ موثق ومنشور للطلاب' : '⏳ بانتظار موافقة الإدارة'}
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            ✅ منشور للطلاب والإدارة
                         </span>
                         <button onclick="deleteListing(${item.id})" class="text-red-500 text-xs font-bold px-3 py-1.5 bg-red-50 rounded-lg">حذف</button>
                     </div>
@@ -868,7 +857,8 @@
             let currentListings = getListings();
             currentListings = currentListings.filter(l => l.id !== id);
             saveListings(currentListings);
-            renderOwnerListings();
+            if(currentUser && currentUser.role === 'owner') renderOwnerListings();
+            if(currentUser && currentUser.role === 'admin') renderAdminData();
             showToast('تم حذف الوحدة بنجاح.', '🗑️');
         }
 
@@ -899,7 +889,7 @@
                     <img src="${prop.image || DEFAULT_APARTMENT_BG}" class="w-full h-56 rounded-2xl object-cover shadow-sm" alt="شقة">
                     ${prop.videoUrl ? `
                         <div class="space-y-1">
-                            <label class="block text-xs font-bold text-sky-900">🎥 جولة فيديو تفصيلية للشقة (تعمل بكفاءة دائماً):</label>
+                            <label class="block text-xs font-bold text-sky-900">🎥 جولة فيديو تفصيلية للشقة:</label>
                             <video controls class="w-full h-48 rounded-2xl bg-black object-contain shadow">
                                 <source src="${prop.videoUrl}" type="video/mp4">
                                 المتصفح لا يدعم عرض الفيديو.
@@ -970,7 +960,6 @@
                     </div>
                 `).join('');
             }
-            document.getElementById('myBookingsModal').classList.add('hidden');
             document.getElementById('myBookingsModal').classList.remove('hidden');
         }
         function closeMyBookings() { document.getElementById('myBookingsModal').classList.add('hidden'); }
@@ -1006,7 +995,7 @@
             showToast(`تم الدفع وشحن المحفظة بمبلغ ${amt} ج.م`, '💳');
         }
 
-        function openSosModal() { document.getElementById('sosModal').classList.remove('hidden'); }
+        function openSosModal() { document.getElementById('sosModal').classList.add('hidden'); document.getElementById('sosModal').classList.remove('hidden'); }
 
         function submitSosReport() {
             const msg = document.getElementById('sosMessage').value.trim();
@@ -1051,7 +1040,7 @@
                 `).join('');
             }
 
-            document.getElementById('adminListingsContainer').innerHTML = currentListings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات مضافة من الملاك حالياً.</p>` : currentListings.map(item => `
+            document.getElementById('adminListingsContainer').innerHTML = currentListings.length === 0 ? `<p class="text-stone-500 text-sm col-span-full text-center py-6">لا توجد وحدات مضافة حالياً.</p>` : currentListings.map(item => `
                 <div class="bg-white p-4 rounded-2xl border space-y-2 text-sm shadow-sm">
                     <div class="flex gap-3 items-center">
                         <img src="${item.image || DEFAULT_APARTMENT_BG}" class="w-16 h-16 rounded-xl object-cover shrink-0" alt="صورة">
@@ -1066,13 +1055,12 @@
                     </div>
                     <p class="text-xs text-primary font-bold bg-stone-50 p-2 rounded-lg">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
                     <div class="flex justify-between items-center pt-2 border-t flex-wrap gap-2">
-                        <span class="text-xs font-bold ${item.status === 'approved' ? 'text-emerald-700' : 'text-amber-600'}">
-                            ${item.status === 'approved' ? '✅ موثق ومنشور للطلاب' : '⏳ بانتظار الاعتماد'}
+                        <span class="text-xs font-bold text-emerald-700">
+                            ✅ منشور للطلاب
                         </span>
                         <div class="flex gap-1.5">
                             <button onclick="openVerifyDocModal(${item.id})" class="bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-stone-200">🛡️ المستندات</button>
-                            ${item.status !== 'approved' ? `<button onclick="adminApprove(${item.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-700">اعتماد ونشر</button>` : ''}
-                            <button onclick="deleteListing(${item.id}); renderAdminData();" class="bg-red-50 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold">حذف</button>
+                            <button onclick="deleteListing(${item.id})" class="bg-red-50 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold">حذف</button>
                         </div>
                     </div>
                 </div>
@@ -1084,21 +1072,10 @@
                     <p class="text-xs"><b>الطالب:</b> ${b.studentName} (${b.studentPhone}) - ${b.studentCollege}</p>
                     <p class="text-xs text-primary"><b>الوحدة:</b> ${b.propTitle} (${b.propArea}) - <span class="${b.propTarget === 'بنات' ? 'text-pink-600' : 'text-blue-600'}">سكن ${b.propTarget}</span></p>
                     <div class="flex gap-2 pt-2 border-t">
-                        ${b.status !== 'confirmed' ? `<button onclick="adminConfirmBooking('${b.id}', ${b.propId})" class="bg-primary text-white px-3 py-1 rounded-xl text-xs font-bold">تأكيد وإغلاق الشقة</button>` : ''}
+                        ${b.status !== 'confirmed' ? `<button onclick="adminConfirmBooking('${b.id}', ${b.propId})" class="bg-primary text-white px-3 py-1 rounded-xl text-xs font-bold">تأكيد الحجز</button>` : ''}
                     </div>
                 </div>
             `).join('');
-        }
-
-        function adminApprove(id) {
-            const currentListings = getListings();
-            const item = currentListings.find(l => l.id === id);
-            if(item) { 
-                item.status = 'approved'; 
-                saveListings(currentListings); 
-                renderAdminData(); 
-                showToast('تم اعتماد الشقة ونشرها للطلاب بنجاح!', '🚀');
-            }
         }
 
         function adminConfirmBooking(bookingId, propId) {
