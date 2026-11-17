@@ -170,14 +170,14 @@
                 <div>
                     <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك الرسمية</span>
                     <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل ثقة وأمان</h2>
-                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو دائم لتظهر للطلاب فوراً.</p>
+                    <p class="text-stone-500 text-sm mt-1">أضف وحدتك مع تفاصيل الفيديو ومستندات الملكية، وتظهر لدى الطلاب فور اعتمادها من الإدارة.</p>
                 </div>
                 <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm shrink-0">
                     ➕ إضافة شقة جديدة للإدارة
                 </button>
             </div>
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">
-                <h3 class="text-lg font-bold text-stone-800 mb-4">الوحدات المضافة وحالة التوثيق لدى الإدارة</h3>
+                <h3 class="text-lg font-bold text-stone-800 mb-4">الوحدات المضافة وحالة الاعتماد من الإدارة</h3>
                 <div id="ownerListingsContainer" class="space-y-4"></div>
             </div>
         </div>
@@ -283,7 +283,7 @@
                 <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200 space-y-1">
                     <label class="block font-bold mb-1 text-sky-900">🎥 رفع جولة فيديو تفصيلية للوحدة (يُحفظ نهائياً)</label>
                     <input type="file" id="propVideoFile" accept="video/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-700 file:text-white cursor-pointer">
-                    <p id="videoStatusMsg" class="text-[10px] text-sky-800">يتم حفظ الفيديو بشكل دائم ليظهر لأي طالب في أي وقت.</p>
+                    <p id="videoStatusMsg" class="text-[10px] text-sky-800">يتم حفظ الفيديو بشكل دائم ليظهر بعد موافقة الإدارة.</p>
                 </div>
 
                 <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
@@ -297,7 +297,7 @@
                 </div>
 
                 <div><label class="block font-bold mb-1">مواصفات السكن</label><textarea id="propDesc" rows="2" class="w-full bg-stone-50 border rounded-xl px-4 py-2.5" placeholder="تكييف، واي فاي، غسالة أوتوماتيك..."></textarea></div>
-                <button type="submit" id="submitListingBtn" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition shadow">إرسال الوحدة للإدارة</button>
+                <button type="submit" id="submitListingBtn" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition shadow">إرسال الوحدة للإدارة للمراجعة</button>
             </form>
         </div>
     </div>
@@ -391,15 +391,10 @@
             ACCOUNTS: 'sknk_master_accounts_v2'
         };
 
-        // قناة مزامنة فورية تعمل بين كافة النوافذ والتبويبات المفتوحة في المتصفح
         const syncChannel = new BroadcastChannel('sknk_sync_channel');
         syncChannel.onmessage = (event) => {
             if (event.data === 'refresh_data') {
-                if (currentUser) {
-                    if (currentUser.role === 'student') renderStudentListings();
-                    if (currentUser.role === 'owner') renderOwnerListings();
-                    if (currentUser.role === 'admin') renderAdminData();
-                }
+                refreshCurrentView();
             }
         };
 
@@ -496,11 +491,15 @@
         let studentWallet = parseFloat(loadStore(STORAGE_KEYS.WALLET, 500)) || 500;
 
         window.addEventListener('storage', () => {
+            refreshCurrentView();
+        });
+
+        function refreshCurrentView() {
             if (!currentUser) return;
             if (currentUser.role === 'student') renderStudentListings();
-            if (currentUser.role === 'owner') renderOwnerListings();
-            if (currentUser.role === 'admin') renderAdminData();
-        });
+            else if (currentUser.role === 'owner') renderOwnerListings();
+            else if (currentUser.role === 'admin') renderAdminData();
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             if(!currentUser) {
@@ -515,7 +514,7 @@
         function updateHeaderUser() {
             const greeting = document.getElementById('userGreeting');
             if(currentUser) {
-                greeting.innerText = `مرحباً، ${currentUser.name} (${currentUser.role === 'owner' ? 'مالك' : 'طالب'})`;
+                greeting.innerText = `مرحباً، ${currentUser.name} (${currentUser.role === 'owner' ? 'مالك' : (currentUser.role === 'admin' ? 'إدارة' : 'طالب')})`;
                 greeting.classList.remove('hidden');
             } else {
                 greeting.classList.add('hidden');
@@ -547,7 +546,7 @@
 
         function clearNotifications() {
             saveNotifications([]);
-            renderAdminData();
+            refreshCurrentView();
             showToast("تم مسح الإشعارات.", "🧹");
         }
 
@@ -701,8 +700,8 @@
         function renderStudentListings() {
             const container = document.getElementById('listingsContainer');
             const allListings = getListings();
-            // تُعرض الشقق المعتمدة أو المضافة حديثاً لتظهر بسلاسة
-            let data = allListings.filter(l => l.status === 'approved' || l.status === 'pending');
+            // الطلاب يشاهدون فقط الوحدات التي تمت الموافقة عليها واعتمادها من الإدارة
+            let data = allListings.filter(l => l.status === 'approved');
             
             if (currentGenderFilter !== 'all') {
                 data = data.filter(l => l.target === currentGenderFilter);
@@ -711,7 +710,7 @@
             document.getElementById('listingsCount').innerText = `${data.length} وحدة متوفرة`;
 
             if(data.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معروضة حالياً</h4><p class="text-stone-500 text-sm mt-1">بانتظار إضافة الوحدات من الملاك.</p></div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center bg-white rounded-3xl border border-stone-200 p-8"><h4 class="text-lg font-bold text-stone-800">لا توجد وحدات معتمدة حالياً</h4><p class="text-stone-500 text-sm mt-1">بانتظار مراجعة واعتماد الوحدات من الإدارة.</p></div>`;
                 return;
             }
 
@@ -800,26 +799,27 @@
                     verifyDoc: verifyDocPath,
                     feeReceipt: feeReceiptPath,
                     desc: document.getElementById('propDesc').value,
-                    status: 'approved' // اعتماد تلقائي لتظهر فوراً عند الطلاب والإدارة للتجربة
+                    status: 'pending' // تبدأ كمعلقة بانتظار موافقة الإدارة
                 };
 
                 const currentListings = getListings();
                 currentListings.unshift(newProp);
                 saveListings(currentListings);
 
-                pushAdminNotification(`🏠 شقة جديدة (${target}) مضافة بواسطة مالك (${currentUser ? currentUser.name : 'عقار'}): "${title}"`, 'owner');
+                pushAdminNotification(`🏠 شقة جديدة قيد المراجعة (${target}) مضافة بواسطة مالك (${currentUser ? currentUser.name : 'عقار'}): "${title}"`, 'owner');
 
                 closeAddListingModal();
                 document.getElementById('addListingModal').querySelector('form').reset();
-                showToast('تم إضافة الشقة ونشرها فوراً للطلاب والإدارة!', '✅');
-                renderOwnerListings();
+                showToast('تم إرسال الشقة للإدارة بنجاح بانتظار الموافقة!', '✅');
+                
+                if(currentUser.role === 'owner') renderOwnerListings();
             } catch (err) {
                 console.error(err);
                 alert("حدث خطأ أثناء حفظ الشقة، حاول مرة أخرى.");
             } finally {
-                btn.innerText = "إرسال الوحدة للإدارة";
+                btn.innerText = "إرسال الوحدة للإدارة للمراجعة";
                 btn.disabled = false;
-                statusMsg.innerText = "يتم حفظ الفيديو بشكل دائم ليظهر لأي طالب في أي وقت.";
+                statusMsg.innerText = "يتم حفظ الفيديو بشكل دائم ليظهر بعد موافقة الإدارة.";
             }
         }
 
@@ -844,8 +844,8 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3 self-end sm:self-center">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                            ✅ منشور للطلاب والإدارة
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${item.status === 'approved' ? '✅ موثق ومنشور للطلاب' : '⏳ بانتظار موافقة الإدارة'}
                         </span>
                         <button onclick="deleteListing(${item.id})" class="text-red-500 text-xs font-bold px-3 py-1.5 bg-red-50 rounded-lg">حذف</button>
                     </div>
@@ -857,8 +857,7 @@
             let currentListings = getListings();
             currentListings = currentListings.filter(l => l.id !== id);
             saveListings(currentListings);
-            if(currentUser && currentUser.role === 'owner') renderOwnerListings();
-            if(currentUser && currentUser.role === 'admin') renderAdminData();
+            refreshCurrentView();
             showToast('تم حذف الوحدة بنجاح.', '🗑️');
         }
 
@@ -995,7 +994,7 @@
             showToast(`تم الدفع وشحن المحفظة بمبلغ ${amt} ج.م`, '💳');
         }
 
-        function openSosModal() { document.getElementById('sosModal').classList.add('hidden'); document.getElementById('sosModal').classList.remove('hidden'); }
+        function openSosModal() { document.getElementById('sosModal').classList.remove('hidden'); }
 
         function submitSosReport() {
             const msg = document.getElementById('sosMessage').value.trim();
@@ -1055,11 +1054,12 @@
                     </div>
                     <p class="text-xs text-primary font-bold bg-stone-50 p-2 rounded-lg">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
                     <div class="flex justify-between items-center pt-2 border-t flex-wrap gap-2">
-                        <span class="text-xs font-bold text-emerald-700">
-                            ✅ منشور للطلاب
+                        <span class="text-xs font-bold ${item.status === 'approved' ? 'text-emerald-700' : 'text-amber-600'}">
+                            ${item.status === 'approved' ? '✅ موثق ومنشور للطلاب' : '⏳ بانتظار الاعتماد'}
                         </span>
                         <div class="flex gap-1.5">
                             <button onclick="openVerifyDocModal(${item.id})" class="bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-stone-200">🛡️ المستندات</button>
+                            ${item.status !== 'approved' ? `<button onclick="adminApprove(${item.id})" class="bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-emerald-700">اعتماد ونشر للطلاب</button>` : ''}
                             <button onclick="deleteListing(${item.id})" class="bg-red-50 text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold">حذف</button>
                         </div>
                     </div>
@@ -1078,6 +1078,17 @@
             `).join('');
         }
 
+        function adminApprove(id) {
+            const currentListings = getListings();
+            const item = currentListings.find(l => l.id === id);
+            if(item) { 
+                item.status = 'approved'; 
+                saveListings(currentListings); 
+                refreshCurrentView();
+                showToast('تم اعتماد الشقة ونشرها بنجاح لتظهر للطلاب!', '🚀');
+            }
+        }
+
         function adminConfirmBooking(bookingId, propId) {
             const currentBookings = getBookings();
             const b = currentBookings.find(x => x.id === bookingId);
@@ -1087,7 +1098,7 @@
             const p = currentListings.find(x => x.id === propId);
             if(p) { p.status = 'booked'; saveListings(currentListings); }
             
-            renderAdminData();
+            refreshCurrentView();
             showToast('تم تأكيد الحجز بنجاح.', '✨');
         }
     </script>
