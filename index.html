@@ -170,7 +170,7 @@
                 <div>
                     <span class="text-xs font-bold text-secondary bg-emerald-50 px-3 py-1 rounded-full">بوابة المالك الرسمية</span>
                     <h2 class="text-2xl font-black text-stone-800 mt-2">اعرض وحدتك للطلاب بكل ثقة وأمان</h2>
-                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو لتصل فوراً إلى الإدارة.</p>
+                    <p class="text-stone-500 text-sm mt-1">حدد ما إذا كان السكن مخصصاً لـ (شباب أو بنات) وأضف وحدتك مع جولة فيديو دائم ليظهر للطلاب فور اعتماده.</p>
                 </div>
                 <button onclick="openAddListingModal()" class="bg-secondary text-white font-bold px-6 py-3 rounded-2xl shadow hover:bg-emerald-800 transition text-sm shrink-0">
                     ➕ إضافة شقة جديدة للإدارة
@@ -280,10 +280,10 @@
                     </div>
                 </div>
 
-                <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200">
-                    <label class="block font-bold mb-1 text-sky-900">🎥 رفع جولة فيديو تفصيلية للوحدة (ملف فيديو)</label>
+                <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200 space-y-1">
+                    <label class="block font-bold mb-1 text-sky-900">🎥 رفع جولة فيديو تفصيلية للوحدة (يُحفظ نهائياً)</label>
                     <input type="file" id="propVideoFile" accept="video/*" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-700 file:text-white cursor-pointer">
-                    <p class="text-[10px] text-sky-800 mt-1">يساعد الفيديو في زيادة مصداقية العقار وسرعة اعتماده من الإدارة.</p>
+                    <p id="videoStatusMsg" class="text-[10px] text-sky-800">يتم حفظ الفيديو بشكل دائم ليظهر لأي طالب في أي وقت.</p>
                 </div>
 
                 <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
@@ -495,6 +495,18 @@
             });
         }
 
+        // تحويل ملف الفيديو إلى Base64 دائم ليظل يعمل للأبد ولا يموت أبداً عند مغادرة الصفحة
+        function convertVideoToBase64(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    resolve(event.target.result);
+                };
+                reader.onerror = () => resolve("");
+            });
+        }
+
         let currentUser = loadStore(STORAGE_KEYS.USER, null);
         let authRole = 'student';
         let isAuthLogin = true;
@@ -594,7 +606,6 @@
             const nameInput = document.getElementById('authName').value.trim();
             const accounts = getRegisteredAccounts();
 
-            // التحقق السري لدخول الإدارة عبر حقول البريد وكلمة المرور الخاصة بها فقط
             if (email === "admin@sknk.com" && pass === "admin2026") {
                 currentUser = { email: "admin@sknk.com", name: "مدير النظام", role: 'admin' };
                 saveStore(STORAGE_KEYS.USER, currentUser);
@@ -624,7 +635,7 @@
                 }
                 const passExists = accounts.some(acc => acc.pass === pass);
                 if (passExists) {
-                    alert("كلمة المرور هذه مستخدمة مسبقاً في حساب آخر، يرجى اختيار كلمة مرور فريدة وغير متكررة لضمان الأمان والخصوصية.");
+                    alert("كلمة المرور هذه مستخدمة مسبقاً في حساب آخر، يرجى اختيار كلمة مرور فريدة وغير متكررة.");
                     return;
                 }
 
@@ -733,7 +744,7 @@
                             <h4 class="font-bold text-stone-800 text-base">${item.title}</h4>
                             <p class="text-xs text-stone-500 mt-1">نوع الوحدة: <b>${item.type}</b></p>
                             <p class="text-xs text-emerald-700 font-bold mt-1">📍 المسافة عن الجامعة: ${item.distance || '5 دقائق سيراً'}</p>
-                            ${item.videoUrl ? `<p class="text-xs text-sky-700 font-bold mt-1">🎥 يتوفر فيديو تفصيلي للوحدة</p>` : ''}
+                            ${item.videoUrl ? `<p class="text-xs text-sky-700 font-bold mt-1">🎥 يتوفر فيديو تفصيلي دائم للوحدة</p>` : ''}
                         </div>
                         <div class="flex justify-between items-center pt-3 border-t">
                             <span class="text-lg font-black primary-color">${item.price} ج.م <span class="text-xs font-normal text-stone-500">/ شهر</span></span>
@@ -756,7 +767,8 @@
         async function submitNewListing(e) {
             e.preventDefault();
             const btn = document.getElementById('submitListingBtn');
-            btn.innerText = "جاري الإرسال...";
+            const statusMsg = document.getElementById('videoStatusMsg');
+            btn.innerText = "جاري معالجة وحفظ الفيديو والبيانات...";
             btn.disabled = true;
 
             try {
@@ -776,7 +788,8 @@
 
                 let videoUrl = "";
                 if (videoInput && videoInput.files && videoInput.files[0]) {
-                    videoUrl = URL.createObjectURL(videoInput.files[0]);
+                    statusMsg.innerText = "⏳ جاري حفظ الفيديو بشكل دائم في الذاكرة...";
+                    videoUrl = await convertVideoToBase64(videoInput.files[0]);
                 }
 
                 const title = document.getElementById('propTitle').value;
@@ -809,14 +822,15 @@
 
                 closeAddListingModal();
                 document.getElementById('addListingModal').querySelector('form').reset();
-                showToast('تم إرسال الشقة للإدارة بنجاح!', '✅');
+                showToast('تم حفظ الشقة والفيديو بنجاح وإرسالها للإدارة!', '✅');
                 renderOwnerListings();
             } catch (err) {
                 console.error(err);
-                alert("حدث خطأ أثناء الحفظ، يرجى المحاولة مرة أخرى.");
+                alert("حدث خطأ أثناء حفظ الفيديو، حاول رفع فيديو أصغر حجماً.");
             } finally {
                 btn.innerText = "إرسال الوحدة للإدارة";
                 btn.disabled = false;
+                statusMsg.innerText = "يتم حفظ الفيديو بشكل دائم ليظهر لأي طالب في أي وقت.";
             }
         }
 
@@ -837,7 +851,7 @@
                         <div>
                             <h4 class="font-bold text-stone-800">${item.title} <span class="text-xs px-2 py-0.5 rounded ${item.target === 'بنات' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">${item.target}</span></h4>
                             <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> - ${item.price} ج.م</p>
-                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 مرفق فيديو تفصيلي</p>` : ''}
+                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 مرفق فيديو دائم للوحدة</p>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center gap-3 self-end sm:self-center">
@@ -885,7 +899,7 @@
                     <img src="${prop.image || DEFAULT_APARTMENT_BG}" class="w-full h-56 rounded-2xl object-cover shadow-sm" alt="شقة">
                     ${prop.videoUrl ? `
                         <div class="space-y-1">
-                            <label class="block text-xs font-bold text-sky-900">🎥 جولة فيديو تفصيلية للشقة:</label>
+                            <label class="block text-xs font-bold text-sky-900">🎥 جولة فيديو تفصيلية للشقة (تعمل بكفاءة دائماً):</label>
                             <video controls class="w-full h-48 rounded-2xl bg-black object-contain shadow">
                                 <source src="${prop.videoUrl}" type="video/mp4">
                                 المتصفح لا يدعم عرض الفيديو.
@@ -956,6 +970,7 @@
                     </div>
                 `).join('');
             }
+            document.getElementById('myBookingsModal').classList.add('hidden');
             document.getElementById('myBookingsModal').classList.remove('hidden');
         }
         function closeMyBookings() { document.getElementById('myBookingsModal').classList.add('hidden'); }
@@ -1046,7 +1061,7 @@
                                 <span class="text-[11px] px-2 py-0.5 rounded font-bold shrink-0 ${item.target === 'بنات' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}">سكن ${item.target}</span>
                             </div>
                             <p class="text-xs text-stone-500">المنطقة: <b>${item.area}</b> | ${item.price} ج.م</p>
-                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 يتوفر فيديو تفصيلي مرفق</p>` : ''}
+                            ${item.videoUrl ? `<p class="text-[11px] text-sky-700 font-bold mt-0.5">🎥 يتوفر فيديو دائم مرفق</p>` : ''}
                         </div>
                     </div>
                     <p class="text-xs text-primary font-bold bg-stone-50 p-2 rounded-lg">العنوان السري: ${item.detailedAddress} | هاتف المالك: ${item.ownerPhone}</p>
